@@ -15,6 +15,7 @@ SetSAMGroup = SET_GROUP:New()
 SetSukhGroups = SET_GROUP:New():FilterPrefixes( "Template Sukh"):FilterStart()	
 SetSochCAP = SET_GROUP:New():FilterPrefixes( "Template CAP Soch"):FilterStart()	
 
+SetClientsWWII = SET_CLIENT:New():FilterPrefixes( "PilWWIIBlue" ):FilterStart()
 	
 Spawn_M29_1 = SPAWN:New("AI Agressor 1")
 Spawn_M29_2 = SPAWN:New("AI Agressor 2")
