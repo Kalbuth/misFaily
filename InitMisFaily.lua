@@ -5,6 +5,8 @@ Zone_EWR = ZONE:New( "EWR Zone" )
 Zone_BUK = ZONE:New( "SA11 Zone" )
 Zone_KUB = ZONE:New( "SA6 Zone" )
 Zone_Template = ZONE:New( "Template Zone" )
+Zones_WWII = {}
+Zones_WWII.["1"] = ZONE:New( "ZONE_WWII_MAYSKIY" )
 
 SetSAMGroup = SET_GROUP:New()
 	:FilterPrefixes( "SAM" )
