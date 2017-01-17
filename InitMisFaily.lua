@@ -6,7 +6,7 @@ Zone_BUK = ZONE:New( "SA11 Zone" )
 Zone_KUB = ZONE:New( "SA6 Zone" )
 Zone_Template = ZONE:New( "Template Zone" )
 Zones_WWII = {}
-Zones_WWII.["1"] = ZONE:New( "ZONE_WWII_MAYSKIY" )
+Zones_WWII.[1] = ZONE:New( "ZONE_WWII_MAYSKIY" )
 
 SetSAMGroup = SET_GROUP:New()
 	:FilterPrefixes( "SAM" )
@@ -17,13 +17,21 @@ SetSochCAP = SET_GROUP:New():FilterPrefixes( "Template CAP Soch"):FilterStart()
 
 SetClientWWII = SET_CLIENT:New():FilterPrefixes( "PilWWIIBlue" ):FilterStart()
 
+-- SetGroupWWIIBlueCAP = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Blue" ):FilterOnce()
+-- SetGroupWWIIRedCAP = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Red" ):FilterOnce()
+
 Spawn_WWII = {}
 
 Spawn_WWII.Blue = {}
 Spawn_WWII.Red = {}
 Spawn_WWII.Blue.CAP = {}
-Spawn_WWII.Blue.CAP.["1"] = SPAWN:New( "WWII_Template_CAP_BLUE_1" )
-Spawn_WWII.Red.CAP.["1"] = SPAWN:New( "WWII_Template_CAP_RED_1" )
+Spawn_WWII.Blue.CAP.Set = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Blue" ):FilterOnce()
+Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Set[0] )
+
+Spawn_WWII.Red.CAP = {}
+Spawn_WWII.Red.CAP.Set = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Red" ):FilterOnce()
+Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[0] )
+
 
 	
 Spawn_M29_1 = SPAWN:New("AI Agressor 1")
