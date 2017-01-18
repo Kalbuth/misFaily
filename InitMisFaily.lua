@@ -6,7 +6,7 @@ Zone_BUK = ZONE:New( "SA11 Zone" )
 Zone_KUB = ZONE:New( "SA6 Zone" )
 Zone_Template = ZONE:New( "Template Zone" )
 Zones_WWII = {}
-Zones_WWII.[1] = ZONE:New( "ZONE_WWII_MAYSKIY" )
+Zones_WWII[1] = ZONE:New( "ZONE_WWII_MAYSKIY" )
 
 SetSAMGroup = SET_GROUP:New()
 	:FilterPrefixes( "SAM" )
@@ -25,12 +25,33 @@ Spawn_WWII = {}
 Spawn_WWII.Blue = {}
 Spawn_WWII.Red = {}
 Spawn_WWII.Blue.CAP = {}
-Spawn_WWII.Blue.CAP.Set = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Blue" ):FilterOnce()
-Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Set[0] )
-
+Spawn_WWII.Blue.CAP.Set = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_BLUE" ):FilterOnce()
 Spawn_WWII.Red.CAP = {}
-Spawn_WWII.Red.CAP.Set = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Red" ):FilterOnce()
-Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[0] )
+Spawn_WWII.Red.CAP.Set = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_RED" ):FilterOnce()
+--Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Set[1].GroupName )
+Spawn_WWII.Blue.CAP.Table = {}
+Spawn_WWII.Red.CAP.Table = {}
+
+for groupName, groupData in pairs( Spawn_WWII.Blue.CAP.Set.Set ) do
+	Spawn_WWII.Blue.CAP.Table[#Spawn_WWII.Blue.CAP.Table + 1] = groupData.GroupName
+end
+env.info( "KALBUTH DEBUG FOLLOWS" )
+env.info( routines.utils.oneLineSerialize( Spawn_WWII.Blue.CAP.Set.Set ) )
+Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Blue.CAP.Table ):InitCleanUp( 120 )
+for groupName, groupData in pairs( Spawn_WWII.Red.CAP.Set.Set ) do
+	Spawn_WWII.Red.CAP.Table[#Spawn_WWII.Red.CAP.Table + 1] = groupData.GroupName
+end
+env.info( "KALBUTH DEBUG FOLLOWS" )
+env.info( routines.utils.oneLineSerialize( Spawn_WWII.Red.CAP.Table[1] ) )
+Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Red.CAP.Table ):InitCleanUp( 120 )
+
+WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
+
+WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP", "Primary", "Patrol Friendly airspace", "Blue" )
+
+WWII_Blue_Task_CAP = TASK:New( WWII_Blue_Mission_CAP, SetClientWWII, "CAP", "Air Air" )
+
+-- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
 
 	
