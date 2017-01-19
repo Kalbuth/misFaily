@@ -18,10 +18,9 @@ do
 			tmpTgtName = unitData:GetCallsign()
 		end
 		
---		local zoneName = "ZONE_INTERCEPT_" .. tmpTgtName .."_" .. tostring(tmpRandomIndex)
-		local zoneName = "ZONE_INTERCEPT_" .. tostring(tmpRandomIndex)
-		env.info("Kalbuth debug : Target zone name is : " .. zoneName)
-		env.info("Kalbuth debug : Tracked group is : " .. routines.utils.oneLineSerialize( tmpTgtGroup ) )
+		local zoneName = "ZONE_INTERCEPT_" .. tmpTgtName .."_" .. tostring(tmpRandomIndex)
+--		local zoneName = "ZONE_INTERCEPT_" .. tostring(tmpRandomIndex)
+		
 		self.TargetZone = ZONE_GROUP:New( zoneName, tmpTgtGroup, 1000 )
 		local Fsm = self:GetUnitProcess()
 		Fsm:AddProcess ( "Planned", "Accept", ACT_ASSIGN_ACCEPT:New( self.TaskBriefing ), { Assigned = "Route", Rejected = "Eject" } )
