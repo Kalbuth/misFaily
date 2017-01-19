@@ -16,6 +16,7 @@ SetSukhGroups = SET_GROUP:New():FilterPrefixes( "Template Sukh"):FilterStart()
 SetSochCAP = SET_GROUP:New():FilterPrefixes( "Template CAP Soch"):FilterStart()	
 
 SetClientWWII = SET_CLIENT:New():FilterPrefixes( "PilWWIIBlue" ):FilterStart()
+SetGroupClientWWII = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue" ):FilterStart()
 
 -- SetGroupWWIIBlueCAP = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Blue" ):FilterOnce()
 -- SetGroupWWIIRedCAP = SET_GROUP:New():FilterPrefixes( "WWII_Template_CAP_Red" ):FilterOnce()
@@ -49,7 +50,12 @@ WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody 
 
 WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP", "Primary", "Patrol Friendly airspace", "Blue" )
 
-WWII_Blue_Task_CAP = TASK:New( WWII_Blue_Mission_CAP, SetClientWWII, "CAP", "Air Air" )
+TestTargetSet = SET_UNIT:New():FilterPrefixes( "TEST_TASK_INTERCEPT" ):FilterStart()
+
+WWII_Blue_Task_CAP = TASK_INTERCEPT:New( WWII_Blue_Mission_CAP, SetGroupClientWWII, "CAP", TestTargetSet )
+
+
+WWII_Blue_Mission_CAP:AddTask( WWII_Blue_Task_CAP )
 
 -- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
@@ -89,7 +95,7 @@ Zone_Achig = ZONE:New("Achigvara")
 
 Sukh_CAP_Zone = ZONE:New('Sukh_Patrol')
 
--- Sukh_PATROL_ZONE = AI_PATROLZONE:New( Sukh_CAP_Zone, 3000, 6000, 500, 800 )
+-- Sukh_PATROL_ZONE = AI_CAP_ZONE:New( Sukh_CAP_Zone, 3000, 6000, 500, 800 )
 
 Sukh_CAP_list = { 'Template CAP Soch 1', 'Template CAP Soch 2', 'Template CAP Soch 3', 'Template CAP Soch 4', 'Template CAP Soch 5' }
 
@@ -99,7 +105,7 @@ Sukh_CAP_Spawn = SPAWN
 	:InitCleanUp( 120 )
 	:OnSpawnGroup( 
 		function (SpawnGroup)
-			SpawnGroup.PatrolZone = AI_PATROLZONE:New( Sukh_CAP_Zone, 5000, 8000, 500, 800 )
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( Sukh_CAP_Zone, 5000, 8000, 500, 800 )
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
 			SpawnGroup.PatrolZone:__Start(5)
@@ -116,7 +122,7 @@ WWII_CAP_Spawn = SPAWN
 	:InitCleanUp( 120 )
 	:OnSpawnGroup(
 		function (SpawnGroup)
-			SpawnGroup.PatrolZone = AI_PATROLZONE:New( WWII_CAP_Zone, 3800, 5000, 300, 500 )
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_CAP_Zone, 3800, 5000, 300, 500 )
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
 			SpawnGroup.PatrolZone:__Start(5)
