@@ -27,7 +27,7 @@ do
 		Fsm:AddProcess ( "Assigned", "Route", ACT_ROUTE_ZONE:New( self.TargetZone ), { Arrived = "Update" } )
 		Fsm:AddTransition( "Rejected", "Eject", "Planned" )
 		Fsm:AddTransition( "Arrived", "Update", "Updated" )
-		Fsm:AddProcess ( "Updated", "Account", ACT_ACCOUNT_DEADS:New( self.TargetSetUnit, "SEAD" ), { Accounted = "Success" } )
+		Fsm:AddProcess ( "Updated", "Account", ACT_ACCOUNT_DEADS:New( self.TargetSetUnit, "Interception" ), { Accounted = "Success" } )
 		Fsm:AddTransition( "Accounted", "Success", "Success" )
 		Fsm:AddTransition( "Failed", "Fail", "Failed" )
 		
