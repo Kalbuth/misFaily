@@ -36,14 +36,12 @@ Spawn_WWII.Red.CAP.Table = {}
 for groupName, groupData in pairs( Spawn_WWII.Blue.CAP.Set.Set ) do
 	Spawn_WWII.Blue.CAP.Table[#Spawn_WWII.Blue.CAP.Table + 1] = groupData.GroupName
 end
-env.info( "KALBUTH DEBUG FOLLOWS" )
-env.info( routines.utils.oneLineSerialize( Spawn_WWII.Blue.CAP.Set.Set ) )
+
 Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Blue.CAP.Table ):InitCleanUp( 120 )
 for groupName, groupData in pairs( Spawn_WWII.Red.CAP.Set.Set ) do
 	Spawn_WWII.Red.CAP.Table[#Spawn_WWII.Red.CAP.Table + 1] = groupData.GroupName
 end
-env.info( "KALBUTH DEBUG FOLLOWS" )
-env.info( routines.utils.oneLineSerialize( Spawn_WWII.Red.CAP.Table[1] ) )
+
 Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Red.CAP.Table ):InitCleanUp( 120 )
 
 WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
@@ -134,10 +132,12 @@ WWII_CAP_Spawn = SPAWN
 			env.info("KALBUTH01 : Listing Units in Group :")
 			env.info(routines.utils.oneLineSerialize(SpawnGroup:GetUnits()))
 			SpawnGroup.TargetSet = SET_UNIT:New()
-			for unitID, unitData in pairs(SpawnGroup:GetUnits()) do
+			local DCSGroup = Group.getByName( SpawnGroup.GroupName )
+			for unitID, unitData in pairs(DCSGroup:getUnits()) do
 				env.info("KALBUTH02 : Adding unit to Target Set")
 				env.info(routines.utils.oneLineSerialize(unitData))
-				SpawnGroup.TargetSet:AddUnit( unitData )
+				local MooseUnit = UNIT:Find( unitData )
+				SpawnGroup.TargetSet:AddUnit( MooseUnit )
 			end
 			SpawnGroup.TaskIntercept = TASK_INTERCEPT:New( Kobu_CAP_MISSION, SetGroupKobu, "Intercept", SpawnGroup.TargetSet )
 			Kobu_CAP_MISSION:AddTask( SpawnGroup.TaskIntercept )
