@@ -36,14 +36,10 @@ Spawn_WWII.Red.CAP.Table = {}
 for groupName, groupData in pairs( Spawn_WWII.Blue.CAP.Set.Set ) do
 	Spawn_WWII.Blue.CAP.Table[#Spawn_WWII.Blue.CAP.Table + 1] = groupData.GroupName
 end
-env.info( "KALBUTH DEBUG FOLLOWS" )
-env.info( routines.utils.oneLineSerialize( Spawn_WWII.Blue.CAP.Set.Set ) )
 Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Blue.CAP.Table ):InitCleanUp( 120 )
 for groupName, groupData in pairs( Spawn_WWII.Red.CAP.Set.Set ) do
 	Spawn_WWII.Red.CAP.Table[#Spawn_WWII.Red.CAP.Table + 1] = groupData.GroupName
 end
-env.info( "KALBUTH DEBUG FOLLOWS" )
-env.info( routines.utils.oneLineSerialize( Spawn_WWII.Red.CAP.Table[1] ) )
 Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Red.CAP.Table ):InitCleanUp( 120 )
 
 WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
