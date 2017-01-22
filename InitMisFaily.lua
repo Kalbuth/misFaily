@@ -48,7 +48,7 @@ Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomiz
 
 WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
 
-WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP", "Primary", "Patrol Friendly airspace", "Blue" )
+WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP MinVody area", "Primary", "Patrol Friendly airspace", "Blue" )
 
 TestTargetSet = SET_UNIT:New():FilterPrefixes( "TEST_TASK_INTERCEPT" ):FilterStart()
 
@@ -59,6 +59,10 @@ WWII_Blue_Mission_CAP:AddTask( WWII_Blue_Task_CAP )
 
 -- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
+
+-- Kobu_CC = COMMANDCENTER:New( STATIC:FindByName( "CC_KOBU" ), "Kobuleti Ground Control" )
+Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
+SetGroupKobu = SET_GROUP:New():FilterPrefixes( "4.Kobu" ):FilterStart()
 
 	
 Spawn_M29_1 = SPAWN:New("AI Agressor 1")
@@ -126,7 +130,17 @@ WWII_CAP_Spawn = SPAWN
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
 			SpawnGroup.PatrolZone:__Start(5)
-			SpawnGroup:OptionROEWeaponFree()
+--			SpawnGroup:OptionROEWeaponFree()
+			env.info("KALBUTH01 : Listing Units in Group :")
+			env.info(routines.utils.oneLineSerialize(SpawnGroup:GetUnits()))
+			SpawnGroup.TargetSet = SET_UNIT:New()
+			for unitID, unitData in pairs(SpawnGroup:GetUnits()) do
+				env.info("KALBUTH02 : Adding unit to Target Set")
+				env.info(routines.utils.oneLineSerialize(unitData))
+				SpawnGroup.TargetSet:AddUnit( unitData )
+			end
+			SpawnGroup.TaskIntercept = TASK_INTERCEPT:New( Kobu_CAP_MISSION, SetGroupKobu, "Intercept", SpawnGroup.TargetSet )
+			Kobu_CAP_MISSION:AddTask( SpawnGroup.TaskIntercept )
 		end
 	)
 	:SpawnScheduled( 1800 , 0 )
