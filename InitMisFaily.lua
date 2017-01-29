@@ -36,18 +36,12 @@ Spawn_WWII.Red.CAP.Table = {}
 for groupName, groupData in pairs( Spawn_WWII.Blue.CAP.Set.Set ) do
 	Spawn_WWII.Blue.CAP.Table[#Spawn_WWII.Blue.CAP.Table + 1] = groupData.GroupName
 end
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/master
 Spawn_WWII.Blue.CAP.Spawn = SPAWN:New( Spawn_WWII.Blue.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Blue.CAP.Table ):InitCleanUp( 120 )
 for groupName, groupData in pairs( Spawn_WWII.Red.CAP.Set.Set ) do
 	Spawn_WWII.Red.CAP.Table[#Spawn_WWII.Red.CAP.Table + 1] = groupData.GroupName
 end
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/master
 Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Red.CAP.Table ):InitCleanUp( 120 )
 
 WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
@@ -65,7 +59,7 @@ WWII_Blue_Mission_CAP:AddTask( WWII_Blue_Task_CAP )
 
 
 -- Kobu_CC = COMMANDCENTER:New( STATIC:FindByName( "CC_KOBU" ), "Kobuleti Ground Control" )
-Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
+-- Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
 SetGroupKobu = SET_GROUP:New():FilterPrefixes( "4.Kobu" ):FilterStart()
 
 	
@@ -121,6 +115,9 @@ Sukh_CAP_Spawn = SPAWN
 	)
 	:SpawnScheduled( 1800 , 0 )
 
+	Kobu_Tasks = {}
+	Kobu_Missions = {}
+	
 WWII_CAP_list = { "Template RUS WWII 1" , "Template RUS WWII 1 #001" , "Template RUS WWII 1 #002" }
 WWII_CAP_Zone_Group = GROUP:FindByName( "WII RED Patrol Zone Group" ) 
 WWII_CAP_Zone = ZONE_POLYGON:New( "WWII_Polygon" , WWII_CAP_Zone_Group )
@@ -141,15 +138,23 @@ WWII_CAP_Spawn = SPAWN
 			local DCSGroup = Group.getByName( SpawnGroup.GroupName )
 			for unitID, unitData in pairs(DCSGroup:getUnits()) do
 				env.info("KALBUTH02 : Adding unit to Target Set")
-				env.info(routines.utils.oneLineSerialize(unitData))
+				env.info(routines.utils.oneLineSerialize(_DATABASE.UNITS[unitData:getName()]))
+				_DATABASE:AddUnit( unitData:getName() )
+				env.info(routines.utils.oneLineSerialize(_DATABASE.UNITS[unitData:getName()]))
 				local MooseUnit = UNIT:Find( unitData )
+				env.info(routines.utils.oneLineSerialize(unitData))
+				env.info(routines.utils.oneLineSerialize(unitData:getName()))
+				env.info(routines.utils.oneLineSerialize(MooseUnit))
 				SpawnGroup.TargetSet:AddUnit( MooseUnit )
 			end
-			SpawnGroup.TaskIntercept = TASK_INTERCEPT:New( Kobu_CAP_MISSION, SetGroupKobu, "Intercept", SpawnGroup.TargetSet )
-			Kobu_CAP_MISSION:AddTask( SpawnGroup.TaskIntercept )
+			Kobu_Missions[#Kobu_Missions + 1] = {}
+			Kobu_Missions[#Kobu_Missions].Mission = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
+			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, "Intercept", SpawnGroup.TargetSet )
+			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
 		end
 	)
 	:SpawnScheduled( 1800 , 0 )
+-- 	:SpawnScheduled( 120 , 0 )
 	
 SetMirageClients = SET_CLIENT:New():FilterPrefixes("Pilot M2000C"):FilterStart()
 
