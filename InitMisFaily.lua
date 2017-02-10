@@ -46,21 +46,21 @@ Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomiz
 
 WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
 
-WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP MinVody area", "Primary", "Patrol Friendly airspace", "Blue" )
+-- WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP MinVody area", "Primary", "Patrol Friendly airspace", "Blue" )
 
-TestTargetSet = SET_UNIT:New():FilterPrefixes( "TEST_TASK_INTERCEPT" ):FilterStart()
+-- TestTargetSet = SET_UNIT:New():FilterPrefixes( "TEST_TASK_INTERCEPT" ):FilterStart()
 
-WWII_Blue_Task_CAP = TASK_INTERCEPT:New( WWII_Blue_Mission_CAP, SetGroupClientWWII, "CAP", TestTargetSet )
+-- WWII_Blue_Task_CAP = TASK_INTERCEPT:New( WWII_Blue_Mission_CAP, SetGroupClientWWII, "CAP", TestTargetSet )
 
 
-WWII_Blue_Mission_CAP:AddTask( WWII_Blue_Task_CAP )
+-- WWII_Blue_Mission_CAP:AddTask( WWII_Blue_Task_CAP )
 
 -- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
 
 -- Kobu_CC = COMMANDCENTER:New( STATIC:FindByName( "CC_KOBU" ), "Kobuleti Ground Control" )
 -- Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
-SetGroupKobu = SET_GROUP:New():FilterPrefixes( "4.Kobu" ):FilterStart()
+SetGroupKobu = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue" ):FilterStart()
 
 	
 Spawn_M29_1 = SPAWN:New("AI Agressor 1")
@@ -120,7 +120,9 @@ Sukh_CAP_Spawn = SPAWN
 	
 WWII_CAP_list = { "Template RUS WWII 1" , "Template RUS WWII 1 #001" , "Template RUS WWII 1 #002" }
 WWII_CAP_Zone_Group = GROUP:FindByName( "WII RED Patrol Zone Group" ) 
+WWII_Circus_Zone_Group = GROUP:FindByName( "WWII Circus Zone" )
 WWII_CAP_Zone = ZONE_POLYGON:New( "WWII_Polygon" , WWII_CAP_Zone_Group )
+WWII_Circus_Zone = ZONE:New( "ZONE_WWII_MAYSKIY" )
 WWII_CAP_Spawn = SPAWN
 	:New("Template RUS WWII 1")
 	:InitRandomizeTemplate( WWII_CAP_list )
@@ -148,13 +150,59 @@ WWII_CAP_Spawn = SPAWN
 				SpawnGroup.TargetSet:AddUnit( MooseUnit )
 			end
 			Kobu_Missions[#Kobu_Missions + 1] = {}
-			Kobu_Missions[#Kobu_Missions].Mission = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
-			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, "Intercept", SpawnGroup.TargetSet )
+			local missionName = "CAP MinVody area (" .. #Kobu_Missions ..")"
+			local taskName = "Intercept (" .. #Kobu_Missions .. ")"
+			Kobu_Missions[#Kobu_Missions].Mission = MISSION:New ( WWII_Blue_CC, missionName, "Primary", "Intercept ennemies", "Blue" )
+			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, taskName, SpawnGroup.TargetSet )
 			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
 		end
 	)
-	:SpawnScheduled( 1800 , 0 )
--- 	:SpawnScheduled( 120 , 0 )
+--	:SpawnScheduled( 1800 , 0 )
+ 	:SpawnScheduled( 120 , 0 )
+
+Circus_RED_SPAWN = SPAWN
+	:New( "Template RUS Circus" )
+	:InitCleanUp ( 120 )
+	:OnSpawnGroup(
+		function (SpawnGroup)
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 5000, 300, 500 )
+			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
+			SpawnGroup.PatrolZone:ManageFuel( 0.2 , 600 )
+			SpawnGroup.PatrolZone:__Start(5)
+		end
+	)
+Circus_BLUE_SPAWN = SPAWN
+	:New( "Template BLUE Circus" )
+	:InitCleanUp ( 120 )
+	:OnSpawnGroup(
+		function (SpawnGroup)
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 5000, 300, 500 )
+			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
+			SpawnGroup.PatrolZone:ManageFuel( 0.2 , 600 )
+			SpawnGroup.PatrolZone:__Start(5)
+		end
+	)
+Circus_Sched = {}
+Circus_GroupList = {}
+
+function StartCircus(  )
+	for i = 0, 7 do
+--		Circus_Sched[#Circus_Sched + 1] = SCHEDULER:New( Circus_RED_SPAWN,
+--			function ( Object, Timer )
+--				Object:Spawn()
+--			end, { i }, 1 + ( i * 10 )
+--		)
+--		Circus_Sched[#Circus_Sched + 1] = SCHEDULER:New( Circus_BLUE_SPAWN,
+--			function ( Object, Timer )
+--				Object:Spawn()
+--			end, { i }, 1 + ( i * 10 )
+--		)
+		Circus_GroupList[ #Circus_GroupList + 1 ] = Circus_RED_SPAWN:Spawn()
+		Circus_GroupList[ #Circus_GroupList + 1 ] = Circus_BLUE_SPAWN:Spawn()
+	end
+
+end
+
 	
 SetMirageClients = SET_CLIENT:New():FilterPrefixes("Pilot M2000C"):FilterStart()
 
@@ -237,6 +285,7 @@ MenuSpawnPlaneFW190 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 
 MenuSpawnPlaneBf109 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Bf109 K4", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Bf109 )
 MenuSpawnPlaneMig15 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig15Bis", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Mig15 )
 MenuSpawnPlaneF86 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 F86-F", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_F86 )
+MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Un Grand Cirque!", MenuSpawnPlaneOther, StartCircus )
 
 
 MenuSpawnGround = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Ground Target" )
