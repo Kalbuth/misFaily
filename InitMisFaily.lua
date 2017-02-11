@@ -92,6 +92,9 @@ Spawn_Kuta_2 = SPAWN:New("Template Kutaisi 2")
 Spawn_Kuta_3 = SPAWN:New("Template Kutaisi 3")
 Spawn_Kuta_4 = SPAWN:New("Template Kutaisi 4")
 Spawn_Kuta_5 = SPAWN:New("Template Kutaisi 5")
+Spawn_Sukh_Mi8 = SPAWN:New("Template Sukh Mi8")
+Spawn_Sukh_Ka50 = SPAWN:New("Template Sukh Ka50")
+Spawn_Gud_Su25T = SPAWN:New("Template Gud Su25T")
 
 Zone_Achig = ZONE:New("Achigvara")
 
@@ -157,8 +160,8 @@ WWII_CAP_Spawn = SPAWN
 			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
 		end
 	)
---	:SpawnScheduled( 1800 , 0 )
- 	:SpawnScheduled( 120 , 0 )
+	:SpawnScheduled( 1800 , 0 )
+-- 	:SpawnScheduled( 120 , 0 )
 
 Circus_RED_SPAWN = SPAWN
 	:New( "Template RUS Circus" )
@@ -286,6 +289,9 @@ MenuSpawnPlaneBf109 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 
 MenuSpawnPlaneMig15 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig15Bis", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Mig15 )
 MenuSpawnPlaneF86 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 F86-F", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_F86 )
 MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Un Grand Cirque!", MenuSpawnPlaneOther, StartCircus )
+MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Mi8", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Mi8 )
+MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Ka50", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Ka50 )
+MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Su25T", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Gud_Su25T )
 
 
 MenuSpawnGround = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Ground Target" )
