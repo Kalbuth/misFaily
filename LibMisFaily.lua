@@ -1,4 +1,26 @@
 do
+	ACT_ROUTE_TARGET = { 
+    ClassName = "ACT_ROUTE_TARGET",
+  }
+	
+	function ACT_ROUTE_TARGET:New( TargetZone )
+    local self = BASE:Inherit( self, ACT_ROUTE_ZONE:New( TargetZone ) )
+		
+		return self
+	end
+	
+	function ACT_ROUTE_TARGET:onenterReporting( ProcessUnit, From, Event, To )
+  
+    local ZoneVec2 = self.TargetZone:GetVec2()
+    local ZonePointVec2 = POINT_VEC2:New( ZoneVec2.x, ZoneVec2.y )
+    local TaskUnitVec2 = ProcessUnit:GetVec2()
+		local ZoneVec3 = self.TargetZone.ZoneGROUP:GetVec3()
+		local ZonePointVec3 = POINT_VEC3:New( ZoneVec3.x, ZoneVec3.z, ZoneVec3.y )
+    local TaskUnitPointVec2 = POINT_VEC2:New( TaskUnitVec2.x, TaskUnitVec2.y )
+    local RouteText = "Route to " .. TaskUnitPointVec2:GetBRText( ZonePointVec2 ) .. " km to target, altitude " .. ZonePointVec3:GetAltitudeText() .. " meters."
+		self:Message( RouteText )
+  end
+	
 	TASK_INTERCEPT = {
 		ClassName = "TASK_INTERCEPT",
 	}
@@ -22,9 +44,10 @@ do
 		local zoneName = "ZONE_INTERCEPT_" .. tostring(tmpRandomIndex)
 		
 		self.TargetZone = ZONE_GROUP:New( zoneName, tmpTgtGroup, 1000 )
+		self.TargetZone:E( "Group Zone created for task :" .. routines.utils.oneLineSerialize(self.TargetZone) )
 		local Fsm = self:GetUnitProcess()
 		Fsm:AddProcess ( "Planned", "Accept", ACT_ASSIGN_ACCEPT:New( self.TaskBriefing ), { Assigned = "Route", Rejected = "Eject" } )
-		Fsm:AddProcess ( "Assigned", "Route", ACT_ROUTE_ZONE:New( self.TargetZone ), { Arrived = "Update" } )
+		Fsm:AddProcess ( "Assigned", "Route", ACT_ROUTE_TARGET:New( self.TargetZone ), { Arrived = "Update" } )
 		Fsm:AddTransition( "Rejected", "Eject", "Planned" )
 		Fsm:AddTransition( "Arrived", "Update", "Updated" )
 		Fsm:AddProcess ( "Updated", "Account", ACT_ACCOUNT_DEADS:New( self.TargetSetUnit, "Interception" ), { Accounted = "Success" } )
@@ -87,5 +110,24 @@ do
     return self:GetStateString() .. " - " .. self:GetTaskName() .. " ( " .. self.TargetSetUnit:GetUnitTypesText() .. " )"
   end
   
+  CSAR_HANDLER = {
+    ClassName = "CSAR_HANDLER",
+  }
+	
+	function CSAR_HANDLER:New( HostileZone, HostileSpawnList )
+  	local self = BASE:Inherit( self, BASE:New() )
+    self:F( HostileZone )
   
+    self.HostileZone = HostileZone
+    self.HostileSpawnList = HostileSpawnList
+    
+    self:HandleEvent( EVENTS.Birth )
+    
+    return self
+	end
+	
+	function CSAR_HANDLER:OnEventBirth( EventData )
+	 
+	end
+	
 end
