@@ -62,7 +62,7 @@ UNITPOOL = { }
 UNITPOOL.BLUE = {}
 UNITPOOL.RED = {}
 
-UNITTYPES = { "Ka50", "Su25", "Mig21", "Mig23", "Su25T", "Su27", "Mig29A", "Mig29S", "M2000C", "A10C", "SA342M", "SA342Mistral" }
+UNITTYPES = { "Ka50", "Su25", "Mig21", "Mig23", "Su25T", "Su27", "Mig29A", "Mig29S", "M2000C", "A10C", "SA342M", "SA342Mistral", "Mi8" }
 
 MenuStartAIAir = MENU_COALITION:New( coalition.side.RED, "Start AI Planes" )
 MenuStartAirports = {}
@@ -70,12 +70,15 @@ MenuStartAirports = {}
 for k, c in ipairs({"RED", "BLUE"}) do
 	for i, airport in ipairs(coalition.getAirbases(coalition.side[c])) do
 		MenuStartAirports[Airbase.getCallsign(airport)] = {}
-		MenuStartAirports[Airbase.getCallsign(airport)].menuBase = MENU_COALITION:New( coalition.side.RED, Airbase.getCallsign(airport), MenuStartAIAir )
+		
 		MenuStartAirports[Airbase.getCallsign(airport)].subMenus = {}
 		for j, model in ipairs(UNITTYPES) do
 			env.info("Checking aircraft existence for coalition ".. c .. " at airport " .. Airbase.getCallsign(airport) .. " for plane model " .. model)
 			env.info("Starting by searching for group named : " .. c .." " .. Airbase.getCallsign(airport) .. " " .. model .. " template")
 			if Group.getByName(c .." " .. Airbase.getCallsign(airport) .. " " .. model .. " template") then
+				if not MenuStartAirports[Airbase.getCallsign(airport)].menuBase then 
+					MenuStartAirports[Airbase.getCallsign(airport)].menuBase = MENU_COALITION:New( coalition.side.RED, Airbase.getCallsign(airport), MenuStartAIAir )
+				end
 				airbaseName = Airbase.getCallsign(airport)
 				groupName = c .. " " .. airbaseName .. " " .. model .. " template"
 				if not MenuStartAirports[airbaseName].subMenus[model] then

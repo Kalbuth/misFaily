@@ -15,7 +15,7 @@ do
     local ZonePointVec2 = POINT_VEC2:New( ZoneVec2.x, ZoneVec2.y )
     local TaskUnitVec2 = ProcessUnit:GetVec2()
 		local ZoneVec3 = self.TargetZone.ZoneGROUP:GetVec3()
-		local ZonePointVec3 = POINT_VEC3:New( ZoneVec3.x, ZoneVec3.z, ZoneVec3.y )
+		local ZonePointVec3 = POINT_VEC3:New( ZoneVec3.x, ZoneVec3.y, ZoneVec3.z )
     local TaskUnitPointVec2 = POINT_VEC2:New( TaskUnitVec2.x, TaskUnitVec2.y )
     local RouteText = "Route to " .. TaskUnitPointVec2:GetBRText( ZonePointVec2 ) .. " km to target, altitude " .. ZonePointVec3:GetAltitudeText() .. " meters."
 		self:Message( RouteText )
@@ -121,13 +121,47 @@ do
     self.HostileZone = HostileZone
     self.HostileSpawnList = HostileSpawnList
     
+    self.MaxHostileSpawnRange = 10000
+    self.MinHostileSpawnRange = 7000
+    self.MaxHostileMoveRange = 4000
+    self.MinHostileMoveRange = 2000
+    self.ZoneID = 1
+    
     self:HandleEvent( EVENTS.Birth )
     
     return self
 	end
 	
 	function CSAR_HANDLER:OnEventBirth( EventData )
-	 
+	 local RescueGroup = EventData.IniGroup
+	 local RescueUnit = RescueGroup:GetUnit( 1 )
+	 local RescueUnitName = EventData.IniUnitName
+	 if string.find(RescueUnitName, "Wounded Pilot", 1) then 
+	   if ( self.HostileZone:IsPointVec3InZone( RescueUnit:GetPointVec3() )) then
+	     local SpawnZone = ZONE_UNIT:New( "ZONE_SPAWN_" .. self.ClassName .. self.ClassID .. "_" .. tostring(self.ZoneID), RescueUnit, self.MaxHostileSpawnRange )
+	     local MoveZone = ZONE_UNIT:New( "ZONE_MOVE_" .. self.ClassName .. self.ClassID .. "_" .. tostring(self.ZoneID), RescueUnit, self.MaxHostileMoveRange )
+	     self.ZoneID = self.ZoneID + 1
+	     for SpawnID, SpawnData in pairs(self.HostileSpawnList) do
+	       local SpawnPoint = SpawnZone:GetRandomPointVec2(self.MinHostileSpawnRange)
+	       local MovePoint = MoveZone:GetRandomPointVec2(self.MinHostileMoveRange)
+	       local HostileGroup = SpawnData:SpawnFromVec2( SpawnPoint:GetVec2() )
+	       local TaskHostile = HostileGroup:TaskRouteToVec2( MovePoint:GetVec2(), 40 )
+	       -- HostileGroup:SetTask( TaskHostile )
+	     end
+	   end
+	 end
 	end
 	
+	function CSAR_HANDLER:SetSpawnParams( MaxSpawnRange, MinSpawnRange )
+	 self:F2( MaxSpawnRange, MinSpawnRange )
+	 self.MaxHostileSpawnRange =MaxSpawnRange
+	 self.MinHostileSpawnRange =MinSpawnRange
+	end
+	
+	function CSAR_HANDLER:SetMoveParams( MaxMoveRange, MinMoveRange )
+	 self:F2( MaxMoveRange, MinMoveRange )
+   self.MaxHostileMoveRange = MaxMoveRange
+   self.MinHostileMoveRange = MinMoveRange
+  end
+  
 end

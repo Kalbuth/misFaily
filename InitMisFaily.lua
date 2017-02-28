@@ -156,7 +156,7 @@ WWII_CAP_Spawn = SPAWN
 			local missionName = "CAP MinVody area (" .. #Kobu_Missions ..")"
 			local taskName = "Intercept (" .. #Kobu_Missions .. ")"
 			Kobu_Missions[#Kobu_Missions].Mission = MISSION:New ( WWII_Blue_CC, missionName, "Primary", "Intercept ennemies", "Blue" )
-			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, taskName, SpawnGroup.TargetSet )
+			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, taskName, SpawnGroup.TargetSet ):SetTimeOut( 1800 )
 			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
 		end
 	)
@@ -244,13 +244,17 @@ end
 local function ReSpawnGroupInZone( Template, Zone )
 	Spawn_Group = Template:SpawnInZone(Zone, 1)
 end
-
+-- Zone_prise_Kutaisi
+CSAR_Kutaisi = {}
+Spawn_Red_CSAR_Kutaisi = SPAWN:New ("Template_RED_CSAR")
+Zone_Red_CSAR_Kutaisi = ZONE:New("Zone_prise_Kutaisi")
 local function SpawnKutaisi(withSAM)
 	local Spawn_Kut1 = Spawn_Kuta_1:Spawn()
 	local Spawn_Kut2 = Spawn_Kuta_2:Spawn()
 	local Spawn_Kut3 = Spawn_Kuta_3:Spawn()
 	local Spawn_Kut4 = Spawn_Kuta_4:Spawn()
 	local Spawn_Kut5 = Spawn_Kuta_5:Spawn()
+	CSAR_Kutaisi = CSAR_HANDLER:New( Zone_Red_CSAR_Kutaisi, { Spawn_Red_CSAR_Kutaisi, } )
 	if withSAM then
 		local Spawn_KutSAM = Spawn_Kuta_SAM:Spawn()
 	end
@@ -276,6 +280,10 @@ local function CleanSAM()
 		end
 	)
 end
+
+Spawn_Red_CSAR = SPAWN:New ("Template_RED_CSAR")
+ZONE_Red_CSAR_1 = ZONE:New("Fight_Zone")
+CSAR_1 = CSAR_HANDLER:New( ZONE_Red_CSAR_1, { Spawn_Red_CSAR, } )
 
 MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane" )
 MenuSpawnPlaneM29_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_1 )
