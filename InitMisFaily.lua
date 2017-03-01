@@ -58,11 +58,79 @@ WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody 
 -- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
 
--- Kobu_CC = COMMANDCENTER:New( STATIC:FindByName( "CC_KOBU" ), "Kobuleti Ground Control" )
+Kobu_CC = COMMANDCENTER:New( STATIC:FindByName( "CC_KOBU" ), "Senaki Ground Control" )
 -- Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
 SetGroupKobu = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue" ):FilterStart()
 
-	
+SetZoneObj = SET_GROUP:New():FilterPrefixes( "ZONE_OBJ" ):FilterStart()
+SetZoneObj:E("Zone Set Defined :" .. routines.utils.oneLineSerialize(SetZoneObj.Set) )
+
+SpawnBlueFAC = SPAWN:New( "Template_Blue_FAC" ):InitRandomizeUnits(true, 3000, 1500)
+ListZoneObj = {}
+
+for groupName, groupData in pairs( SetZoneObj.Set ) do
+  BASE:E("1st Sub is " .. (string.gsub(groupName, "ZONE_OBJ_", "")))
+  local tmpSub = string.gsub(groupName, "ZONE_OBJ_", "")
+  BASE:E("2nd Sub is " .. (string.gsub(tmpSub, "%D", "")))
+  local radius = tonumber( string.gsub(tmpSub, "%D", "") )
+  
+  local name = string.gsub(tmpSub, "%A", "")
+
+  ListZoneObj[#ListZoneObj + 1] = ZONE_GROUP:New( name, groupData, radius )
+
+end
+
+SetRedObj = SET_GROUP:New():FilterPrefixes( "Template_RED_OBJ" ):FilterOnce()
+SetRedObj:E("Group Set Defined :" .. routines.utils.oneLineSerialize(SetRedObj) )
+ListSpawnRedObj = {}
+for groupName, groupData in pairs( SetRedObj.Set ) do
+  ListSpawnRedObj[#ListSpawnRedObj + 1] = SPAWN:New( groupName ):InitRandomizeUnits(true, 800, 200)
+end
+
+SetAllBlue = SET_GROUP:New():FilterCoalitions( "blue" )
+
+RndGrdObj = {}
+
+
+function RandomGroundObj()
+  RndGrdObj[#RndGrdObj + 1] = {}
+  RndGrdObj[#RndGrdObj].SetAGTargets = SET_UNIT:New()
+  local rndZone = math.random(1, #ListZoneObj)
+  local rndGroup = math.random(1, #ListSpawnRedObj)
+  local newZone = ListZoneObj[ rndZone ]
+  local ZoneName = newZone:GetName()
+  local newSpawn = ListSpawnRedObj[ rndGroup ]
+  local newGroup = newSpawn:SpawnInZone( newZone, true )
+  RndGrdObj[#RndGrdObj].FAC = SpawnBlueFAC:SpawnFromUnit(newGroup:GetUnit( 1 ))
+  
+  for _, unitData in pairs(newGroup:GetUnits()) do
+    RndGrdObj[#RndGrdObj].SetAGTargets:Add( unitData:GetName(), unitData )
+  end
+  RndGrdObj[#RndGrdObj].AGMission = MISSION:New( Kobu_CC, "Attaque au sol", "Primary", "Ciblez les ennemis sur" .. ZoneName, "Blue" )
+  RndGrdObj[#RndGrdObj].AGTask = TASK_A2G
+    :New( RndGrdObj[#RndGrdObj].AGMission, 
+      SetAllBlue, 
+      "Strike " .. ZoneName, 
+      "Attaque au sol", 
+      RndGrdObj[#RndGrdObj].SetAGTargets, 
+      newZone, 
+      RndGrdObj[#RndGrdObj].FAC )
+     :SetTimeOut( 1200 )
+end
+
+function ClearGroundObj()
+  for _, objData in pairs(RndGrdObj) do
+    local tmpSet = objData.SetAGTargets.Set
+    for _, unitData in pairs( tmpSet ) do
+      unitData:Destroy()
+    end
+    objData.FAC:Destroy()
+    -- RndGrdObj[#RndGrdObj].AGMission:ClearMissionMenu()
+    -- RndGrdObj[#RndGrdObj].AGMission = nil
+    -- RndGrdObj[#RndGrdObj].AGTask = nil
+  end
+end
+
 Spawn_M29_1 = SPAWN:New("AI Agressor 1")
 Spawn_M29_2 = SPAWN:New("AI Agressor 2")
 Spawn_M23_1 = SPAWN:New("AI Agressor 3")
@@ -117,6 +185,23 @@ Sukh_CAP_Spawn = SPAWN
 		end
 	)
 	:SpawnScheduled( 1800 , 0 )
+
+SetSukhCAP = SET_GROUP:New():FilterPrefixes( "Template CAP Soch 1#"):FilterStart()
+
+function StartSetSpawning( SetGroup )
+  SetGroup:SpawnScheduleStart()
+end
+
+function StopSetSpawning( SetGroup )
+  SetGroup:SpawnScheduleStop()
+end
+
+function ClearSetGroup(SetGroup)
+  for groupID, groupData in pairs( SetGroup.Set ) do
+    groupData:Destroy()
+  end
+end
+
 
 	Kobu_Tasks = {}
 	Kobu_Missions = {}
@@ -297,9 +382,13 @@ MenuSpawnPlaneBf109 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 
 MenuSpawnPlaneMig15 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig15Bis", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Mig15 )
 MenuSpawnPlaneF86 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 F86-F", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_F86 )
 MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Un Grand Cirque!", MenuSpawnPlaneOther, StartCircus )
-MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Mi8", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Mi8 )
-MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Ka50", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Ka50 )
-MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Su25T", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Gud_Su25T )
+MenuSpawnPlaneMi8 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Mi8", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Mi8 )
+MenuSpawnPlaneKa50 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Ka50", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Ka50 )
+MenuSpawnPlaneSu25T = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Su25T", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Gud_Su25T )
+MenuSpawnPlaneControl = MENU_COALITION:New( coalition.side.BLUE, "Controle des spawns", MenuSpawnPlane)
+MenuSpawnPlaneStopSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Stopper le spawn auto a Sochi", MenuSpawnPlaneControl, StartSetSpawning, Sukh_CAP_Spawn )
+MenuSpawnPlaneStartSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Demarrer le spawn auto a Sochi", MenuSpawnPlaneControl,  StopSetSpawning, Sukh_CAP_Spawn )
+MenuSpawnPlaneClearSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detruire les CAP ennemis en vol", MenuSpawnPlaneControl,  ClearSetGroup, SetSukhCAP )
 
 
 MenuSpawnGround = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Ground Target" )
@@ -309,7 +398,9 @@ MenuSpawnGGroup3 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Infan
 MenuSpawnGGroup4 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Kutaisi scenario - no SA19", MenuSpawnGround, SpawnKutaisi, false )
 MenuSpawnGGroup5 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Kutaisi scenario - w/ SA19", MenuSpawnGround, SpawnKutaisi, true )
 MenuSpawnGGroup6 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Achigvara scenario", MenuSpawnGround, SpawnAchigvara )
-
+MenuSpawnGGroup7 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Random Ground Attack scenario", MenuSpawnGround, RandomGroundObj )
+MenuSpawnGroundControl = MENU_COALITION:New( coalition.side.BLUE, "Controle des troupes", MenuSpawnGround)
+MenuSpawnGroundClearRnd = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detruire les troupes des objectifs random", MenuSpawnGroundControl, ClearGroundObj )
 
 
 MenuSpawnSAM = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy SAM" )

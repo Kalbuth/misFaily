@@ -146,6 +146,7 @@ do
 	       local MovePoint = MoveZone:GetRandomPointVec2(self.MinHostileMoveRange)
 	       local HostileGroup = SpawnData:SpawnFromVec2( SpawnPoint:GetVec2() )
 	       local TaskHostile = HostileGroup:TaskRouteToVec2( MovePoint:GetVec2(), 40 )
+	       self:E( "Task for ground group: " .. routines.utils.oneLineSerialize(TaskHostile))
 	       -- HostileGroup:SetTask( TaskHostile )
 	     end
 	   end
@@ -156,12 +157,14 @@ do
 	 self:F2( MaxSpawnRange, MinSpawnRange )
 	 self.MaxHostileSpawnRange =MaxSpawnRange
 	 self.MinHostileSpawnRange =MinSpawnRange
+	 return self
 	end
 	
 	function CSAR_HANDLER:SetMoveParams( MaxMoveRange, MinMoveRange )
 	 self:F2( MaxMoveRange, MinMoveRange )
    self.MaxHostileMoveRange = MaxMoveRange
    self.MinHostileMoveRange = MinMoveRange
+   return self
   end
   
 end
