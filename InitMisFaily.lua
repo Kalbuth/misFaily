@@ -65,7 +65,7 @@ SetGroupKobu = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue" ):FilterStart()
 SetZoneObj = SET_GROUP:New():FilterPrefixes( "ZONE_OBJ" ):FilterStart()
 SetZoneObj:E("Zone Set Defined :" .. routines.utils.oneLineSerialize(SetZoneObj.Set) )
 
-SpawnBlueFAC = SPAWN:New( "Template_Blue_FAC" ):InitRandomizeUnits(true, 3000, 1500)
+SpawnBlueFAC = SPAWN:New( "Template_Blue_FAC" ):InitRandomizeUnits(true, 3000, 2000)
 ListZoneObj = {}
 
 for groupName, groupData in pairs( SetZoneObj.Set ) do
@@ -84,14 +84,18 @@ SetRedObj = SET_GROUP:New():FilterPrefixes( "Template_RED_OBJ" ):FilterOnce()
 SetRedObj:E("Group Set Defined :" .. routines.utils.oneLineSerialize(SetRedObj) )
 ListSpawnRedObj = {}
 for groupName, groupData in pairs( SetRedObj.Set ) do
-  ListSpawnRedObj[#ListSpawnRedObj + 1] = SPAWN:New( groupName ):InitRandomizeUnits(true, 800, 200)
+  ListSpawnRedObj[#ListSpawnRedObj + 1] = SPAWN:New( groupName ):InitRandomizeUnits(true, 300, 100)
 end
 
 SetAllBlue = SET_GROUP:New():FilterCoalitions( "blue" )
 
 RndGrdObj = {}
 
-
+RndMission = MISSION:New(Kobu_CC, "Attaque au sol", "Primary", "Support A2G Zone Nord Ouest" , "Blue" )
+FACSet = SET_GROUP:New():FilterPrefixes( "Template_Blue_FAC" ):FilterStart()
+FACAreas = DETECTION_AREAS:New( FACSet, 500, 3000 )
+FACAreas:BoundDetectedZones()
+AttackGroups = SET_GROUP:New():FilterPrefixes( "8.Ka50" ):FilterStart()
 function RandomGroundObj()
   RndGrdObj[#RndGrdObj + 1] = {}
   RndGrdObj[#RndGrdObj].SetAGTargets = SET_UNIT:New()
@@ -102,7 +106,7 @@ function RandomGroundObj()
   local newSpawn = ListSpawnRedObj[ rndGroup ]
   local newGroup = newSpawn:SpawnInZone( newZone, true )
   RndGrdObj[#RndGrdObj].FAC = SpawnBlueFAC:SpawnFromUnit(newGroup:GetUnit( 1 ))
-  
+[[  
   for _, unitData in pairs(newGroup:GetUnits()) do
     RndGrdObj[#RndGrdObj].SetAGTargets:Add( unitData:GetName(), unitData )
   end
@@ -116,6 +120,9 @@ function RandomGroundObj()
       newZone, 
       RndGrdObj[#RndGrdObj].FAC )
      :SetTimeOut( 1200 )
+     ]]
+     
+  
 end
 
 function ClearGroundObj()
@@ -184,7 +191,7 @@ Sukh_CAP_Spawn = SPAWN
 			SpawnGroup.PatrolZone:__Start(5)
 		end
 	)
-	:SpawnScheduled( 1800 , 0 )
+--	:SpawnScheduled( 1800 , 0 )
 
 SetSukhCAP = SET_GROUP:New():FilterPrefixes( "Template CAP Soch 1#"):FilterStart()
 
@@ -245,7 +252,7 @@ WWII_CAP_Spawn = SPAWN
 			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
 		end
 	)
-	:SpawnScheduled( 1800 , 0 )
+--	:SpawnScheduled( 1800 , 0 )
 -- 	:SpawnScheduled( 120 , 0 )
 
 Circus_RED_SPAWN = SPAWN
@@ -330,8 +337,8 @@ local function ReSpawnGroupInZone( Template, Zone )
 	Spawn_Group = Template:SpawnInZone(Zone, 1)
 end
 -- Zone_prise_Kutaisi
-CSAR_Kutaisi = {}
-Spawn_Red_CSAR_Kutaisi = SPAWN:New ("Template_RED_CSAR")
+CSAR_Kutaisi = {"Template_RED_CSAR", "Template_RED_CSAR #001"}
+Spawn_Red_CSAR_Kutaisi = SPAWN:New ("Template_RED_CSAR"):InitRandomizeTemplate( CSAR_Kutaisi )
 Zone_Red_CSAR_Kutaisi = ZONE:New("Zone_prise_Kutaisi")
 local function SpawnKutaisi(withSAM)
 	local Spawn_Kut1 = Spawn_Kuta_1:Spawn()
@@ -345,13 +352,7 @@ local function SpawnKutaisi(withSAM)
 	end
 end
 
-local function SpawnAchigvara()
-	local Achig_group1 = mist.cloneInZone("infantry FARP 1", "Achigvara")
-	local Achig_group2 = mist.cloneInZone("RUS_ARMOR_L_2", "Achigvara")
-	local Achig_group3 = mist.cloneInZone("Template Kutaisi 1", "Achigvara")
-	local Achig_group4 = mist.cloneInZone("Template Kutaisi 2", "Achigvara")
-	local Achig_group5 = mist.cloneInZone("Template Kutaisi 3", "Achigvara")
-end
+
 
 local function CleanSAM()
 	SetSAMGroup:ForEachGroupNotInZone( Zone_Template,
@@ -394,10 +395,8 @@ MenuSpawnPlaneClearSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "De
 MenuSpawnGround = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Ground Target" )
 MenuSpawnGGroup1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Armor chemin 1", MenuSpawnGround, SpawnNewGroup, Spawn_Ground_1 )
 MenuSpawnGGroup2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Armor chemin 2", MenuSpawnGround, SpawnNewGroup, Spawn_Ground_2 )
-MenuSpawnGGroup3 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Infantry FARP GH12", MenuSpawnGround, SpawnNewGroup, Spawn_Inf_RUS_1 )
 MenuSpawnGGroup4 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Kutaisi scenario - no SA19", MenuSpawnGround, SpawnKutaisi, false )
 MenuSpawnGGroup5 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Kutaisi scenario - w/ SA19", MenuSpawnGround, SpawnKutaisi, true )
-MenuSpawnGGroup6 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Achigvara scenario", MenuSpawnGround, SpawnAchigvara )
 MenuSpawnGGroup7 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Random Ground Attack scenario", MenuSpawnGround, RandomGroundObj )
 MenuSpawnGroundControl = MENU_COALITION:New( coalition.side.BLUE, "Controle des troupes", MenuSpawnGround)
 MenuSpawnGroundClearRnd = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detruire les troupes des objectifs random", MenuSpawnGroundControl, ClearGroundObj )
