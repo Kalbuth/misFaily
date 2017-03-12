@@ -93,9 +93,10 @@ RndGrdObj = {}
 
 RndMission = MISSION:New(Kobu_CC, "Attaque au sol", "Primary", "Support A2G Zone Nord Ouest" , "Blue" )
 FACSet = SET_GROUP:New():FilterPrefixes( "Template_Blue_FAC" ):FilterStart()
-FACAreas = DETECTION_AREAS:New( FACSet, 500, 3000 )
+FACAreas = DETECTION_AREAS:New( FACSet, 5000, 1000 )
 FACAreas:BoundDetectedZones()
 AttackGroups = SET_GROUP:New():FilterPrefixes( "8.Ka50" ):FilterStart()
+TaskDispatcher = TASK_A2G_DISPATCHER:New( RndMission, Kobu_CC, AttackGroups, FACAreas )
 function RandomGroundObj()
   RndGrdObj[#RndGrdObj + 1] = {}
   RndGrdObj[#RndGrdObj].SetAGTargets = SET_UNIT:New()
@@ -106,23 +107,6 @@ function RandomGroundObj()
   local newSpawn = ListSpawnRedObj[ rndGroup ]
   local newGroup = newSpawn:SpawnInZone( newZone, true )
   RndGrdObj[#RndGrdObj].FAC = SpawnBlueFAC:SpawnFromUnit(newGroup:GetUnit( 1 ))
-[[  
-  for _, unitData in pairs(newGroup:GetUnits()) do
-    RndGrdObj[#RndGrdObj].SetAGTargets:Add( unitData:GetName(), unitData )
-  end
-  RndGrdObj[#RndGrdObj].AGMission = MISSION:New( Kobu_CC, "Attaque au sol", "Primary", "Ciblez les ennemis sur" .. ZoneName, "Blue" )
-  RndGrdObj[#RndGrdObj].AGTask = TASK_A2G
-    :New( RndGrdObj[#RndGrdObj].AGMission, 
-      SetAllBlue, 
-      "Strike " .. ZoneName, 
-      "Attaque au sol", 
-      RndGrdObj[#RndGrdObj].SetAGTargets, 
-      newZone, 
-      RndGrdObj[#RndGrdObj].FAC )
-     :SetTimeOut( 1200 )
-     ]]
-     
-  
 end
 
 function ClearGroundObj()
@@ -295,7 +279,15 @@ function StartCircus(  )
 		Circus_GroupList[ #Circus_GroupList + 1 ] = Circus_RED_SPAWN:Spawn()
 		Circus_GroupList[ #Circus_GroupList + 1 ] = Circus_BLUE_SPAWN:Spawn()
 	end
+  local FollowGroupSet = SET_GROUP:New():FilterCategories("plane"):FilterCoalitions("blue"):FilterPrefixes("Template BLUE Circus"):FilterStart()
 
+  FollowGroupSet:Flush()
+
+  local LeaderUnit = Circus_GroupList[1]:GetUnit(1)
+
+  local LargeFormation = AI_FORMATION:New( LeaderUnit, FollowGroupSet, "Large Formation", "Briefing" ):TestSmokeDirectionVector(false)
+
+  LargeFormation:__Start( 1 )
 end
 
 	
