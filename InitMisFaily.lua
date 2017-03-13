@@ -94,8 +94,9 @@ RndGrdObj = {}
 RndMission = MISSION:New(Kobu_CC, "Attaque au sol", "Primary", "Support A2G Zone Nord Ouest" , "Blue" )
 FACSet = SET_GROUP:New():FilterPrefixes( "Template_Blue_FAC" ):FilterStart()
 FACAreas = DETECTION_AREAS:New( FACSet, 5000, 1000 )
-FACAreas:BoundDetectedZones()
-AttackGroups = SET_GROUP:New():FilterPrefixes( "8.Ka50" ):FilterStart()
+-- FACAreas:BoundDetectedZones()
+AttackPrefixes = { "8.Ka50", "2.A10C", "3.L39", "5.SU25", "8.1Gazelle", "8.3Gazelle", "8.3Ka50", "8.GAZELLE", }
+AttackGroups = SET_GROUP:New():FilterPrefixes( AttackPrefixes ):FilterStart()
 TaskDispatcher = TASK_A2G_DISPATCHER:New( RndMission, Kobu_CC, AttackGroups, FACAreas )
 function RandomGroundObj()
   RndGrdObj[#RndGrdObj + 1] = {}
@@ -416,6 +417,93 @@ MenuSpawnRUS = MENU_COALITION:New( coalition.side.RED, "Spawn Assets" )
 MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.RED, "Spawn GCI", MenuSpawnRUS, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
 
 
-function addTroops( )
 
+-- Dynamic ground movement (Kutaisi - Kashuri region) begins here
+-- DynGround holds all variable and functions for Dynamic Ground war stuff
+SetBlueObj = SET_GROUP:New():FilterPrefixes( "Template_BLUE_OBJ" ):FilterOnce()
+SetBlueObj:Flush()
+
+DynGround = BASE:New()
+
+DynGround.ClassName = "MAIN_DYN_GROUND"
+
+-- Objective Zones are defined with Late activation groups with specific naming convention
+-- Name format : ZONE_DYN_<Faction>_<ID>_<NAME>_<RADIUS>
+-- Faction is "R" or "B" for Red or Blue
+-- ID is a number. There should be 1 Zone of the same ID for each faction which will pair them
+-- Zone ID X for Red will send troops toward Zone ID X for Blue, and vice versa
+
+-- Define the Group Set that will be used to list the zones defined in the ME
+DynGround.GroupZoneSet = SET_GROUP:New():FilterPrefixes( "ZONE_DYN" ):FilterOnce()
+
+DynGround.ListZoneObj = { }
+
+-- .red & .blue holds things for red and blue factions
+DynGround.red = {}
+DynGround.blue = {}
+DynGround.red.obj = {}
+DynGround.blue.obj = {}
+
+-- Templates list the group templates use for Spawning
+DynGround.red.Templates = {}
+DynGround.blue.Templates = {}
+for groupName, groupData in pairs( SetRedObj.Set ) do
+  DynGround.red.Templates[#DynGround.red.Templates + 1] = groupName
+end
+for groupName, groupData in pairs( SetBlueObj.Set ) do
+  DynGround.blue.Templates[#DynGround.blue.Templates + 1] = groupName
+end
+
+-- DefSpawn & OffSpawn are the SPAWN objects for defensive and offensive units of each zone
+DynGround.red.DefSpawn = SPAWN:New(DynGround.red.Templates[1]):InitRandomizeTemplate(DynGround.red.Templates):InitRandomizeUnits(true, 300, 100)
+DynGround.red.OffSpawn = SPAWN:New(DynGround.red.Templates[1]):InitRandomizeTemplate(DynGround.red.Templates):InitRandomizeUnits(true, 300, 100)
+DynGround.blue.DefSpawn = SPAWN:New(DynGround.blue.Templates[1]):InitRandomizeTemplate(DynGround.blue.Templates):InitRandomizeUnits(true, 300, 100)
+DynGround.blue.OffSpawn = SPAWN:New(DynGround.blue.Templates[1]):InitRandomizeTemplate(DynGround.blue.Templates):InitRandomizeUnits(true, 300, 100)
+
+
+-- Iterate the SET_GROUP listing all the zones defined in ME
+for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
+-- for each group, do some string fu to extract the faction, ID, name and radius
+  local tmpSub = string.gsub(groupName, "ZONE_DYN_", "")
+  
+  local splitSub = csplit(tmpSub, "_")
+  
+  local radius = tonumber(splitSub[4])
+  local name = splitSub[3]
+  local id = tonumber(splitSub[2])
+  -- if faction is red, create the ZONE, and defensive groups in each zone, and store all related variables in the .red part
+  if splitSub[1]=="R" then
+    DynGround.red.obj[id] = {}
+    DynGround.red.obj[id].Zone = ZONE_GROUP:New(name .. "_red_defense", groupData, radius)
+    DynGround.red.obj[id].ZoneName = name
+    DynGround.red.obj[id].Def1 = DynGround.red.DefSpawn:SpawnInZone(DynGround.red.obj[id].Zone, true)
+    DynGround.red.obj[id].Def2 = DynGround.red.DefSpawn:SpawnInZone(DynGround.red.obj[id].Zone, true)
+  end
+  -- Ditto if faction is blue
+  if splitSub[1]=="B" then
+    DynGround.blue.obj[id] = {}
+    DynGround.blue.obj[id].Zone = ZONE_GROUP:New(name .. "_blue_defense", groupData, radius)
+    DynGround.blue.obj[id].ZoneName = name
+    DynGround.blue.obj[id].Def1 = DynGround.blue.DefSpawn:SpawnInZone(DynGround.blue.obj[id].Zone, true)
+    DynGround.blue.obj[id].Def2 = DynGround.blue.DefSpawn:SpawnInZone(DynGround.blue.obj[id].Zone, true)
+    DynGround.blue.obj[id].DefSet = SET_GROUP:New()
+    DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def1", DynGround.blue.obj[id].Def1)
+    DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def2", DynGround.blue.obj[id].Def2)
+    DynGround.blue.obj[id].DefMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez la defense sur " .. name , "Blue" )
+    DynGround.blue.obj[id].DefArea = DETECTION_AREAS:New( DynGround.blue.obj[id].DefSet, 500 )
+  end
+  
+
+end
+
+-- Iterate each Zone per faction to create offensive groups to send toward the opposing ennemy faction Zone (same ID)
+for id, objData in pairs(DynGround.red.obj) do
+  local nmeZone = DynGround.blue.obj[id].Zone
+  DynGround.red.obj[id].Off = DynGround.red.OffSpawn:SpawnInZone(DynGround.red.obj[id].Zone)
+  DynGround.red.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "line" )
+end
+for id, objData in pairs(DynGround.blue.obj) do
+  local nmeZone = DynGround.red.obj[id].Zone
+  DynGround.blue.obj[id].Off = DynGround.blue.OffSpawn:SpawnInZone(DynGround.blue.obj[id].Zone)
+  DynGround.blue.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "line" )
 end
