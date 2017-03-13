@@ -480,6 +480,7 @@ for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
     DynGround.red.obj[id].Def2 = DynGround.red.DefSpawn:SpawnInZone(DynGround.red.obj[id].Zone, true)
   end
   -- Ditto if faction is blue
+  -- for blue side, Defensive group can act as FAC for defensive Mission given to players
   if splitSub[1]=="B" then
     DynGround.blue.obj[id] = {}
     DynGround.blue.obj[id].Zone = ZONE_GROUP:New(name .. "_blue_defense", groupData, radius)
@@ -490,7 +491,8 @@ for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
     DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def1", DynGround.blue.obj[id].Def1)
     DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def2", DynGround.blue.obj[id].Def2)
     DynGround.blue.obj[id].DefMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez la defense sur " .. name , "Blue" )
-    DynGround.blue.obj[id].DefArea = DETECTION_AREAS:New( DynGround.blue.obj[id].DefSet, 500 )
+    DynGround.blue.obj[id].DefArea = DETECTION_AREAS:New( DynGround.blue.obj[id].DefSet, 500 ):SetAcceptRange(5000)
+    DynGround.blue.obj[id].DefDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].DefMission, Kobu_CC, AttackGroups, DynGround.blue.obj[id].DefArea )
   end
   
 
@@ -502,8 +504,15 @@ for id, objData in pairs(DynGround.red.obj) do
   DynGround.red.obj[id].Off = DynGround.red.OffSpawn:SpawnInZone(DynGround.red.obj[id].Zone)
   DynGround.red.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "line" )
 end
+-- for blue, Offensive group can ac as FAC for Offensive Support mission given to players
 for id, objData in pairs(DynGround.blue.obj) do
   local nmeZone = DynGround.red.obj[id].Zone
+  local nmeZoneName = DynGround.red.obj[id].ZoneName
   DynGround.blue.obj[id].Off = DynGround.blue.OffSpawn:SpawnInZone(DynGround.blue.obj[id].Zone)
   DynGround.blue.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "line" )
+  DynGround.blue.obj[id].OffSet = SET_GROUP:New()
+  DynGround.blue.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.blue.obj[id].Off)
+  DynGround.blue.obj[id].OffMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez l'attaque sur " .. nmeZoneName , "Blue" )
+  DynGround.blue.obj[id].OffArea = DETECTION_AREAS:New( DynGround.blue.obj[id].OffSet, 500 ):SetAcceptRange(5000)
+  DynGround.blue.obj[id].OffDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].OffMission, Kobu_CC, AttackGroups, DynGround.blue.obj[id].OffArea )
 end
