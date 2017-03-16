@@ -58,7 +58,7 @@ WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody 
 -- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
 
-Kobu_CC = COMMANDCENTER:New( STATIC:FindByName( "CC_KOBU" ), "Senaki Ground Control" )
+Kobu_CC = COMMANDCENTER:New( GROUP:FindByName( "CC_SENAKI" ), "Senaki Ground Control" )
 -- Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
 SetGroupKobu = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue" ):FilterStart()
 
@@ -214,19 +214,11 @@ WWII_CAP_Spawn = SPAWN
 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
 			SpawnGroup.PatrolZone:__Start(5)
 --			SpawnGroup:OptionROEWeaponFree()
-			env.info("KALBUTH01 : Listing Units in Group :")
-			env.info(routines.utils.oneLineSerialize(SpawnGroup:GetUnits()))
 			SpawnGroup.TargetSet = SET_UNIT:New()
 			local DCSGroup = Group.getByName( SpawnGroup.GroupName )
 			for unitID, unitData in pairs(DCSGroup:getUnits()) do
-				env.info("KALBUTH02 : Adding unit to Target Set")
-				env.info(routines.utils.oneLineSerialize(_DATABASE.UNITS[unitData:getName()]))
 				_DATABASE:AddUnit( unitData:getName() )
-				env.info(routines.utils.oneLineSerialize(_DATABASE.UNITS[unitData:getName()]))
 				local MooseUnit = UNIT:Find( unitData )
-				env.info(routines.utils.oneLineSerialize(unitData))
-				env.info(routines.utils.oneLineSerialize(unitData:getName()))
-				env.info(routines.utils.oneLineSerialize(MooseUnit))
 				SpawnGroup.TargetSet:AddUnit( MooseUnit )
 			end
 			Kobu_Missions[#Kobu_Missions + 1] = {}
@@ -477,7 +469,9 @@ for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
     DynGround.red.obj[id].Zone = ZONE_GROUP:New(name .. "_red_defense", groupData, radius)
     DynGround.red.obj[id].ZoneName = name
     DynGround.red.obj[id].Def1 = DynGround.red.DefSpawn:SpawnInZone(DynGround.red.obj[id].Zone, true)
+    DynGround:E("Creating first defensive group for Red zone ID " .. id .. ", name " .. name ..". Group descr : " .. routines.utils.oneLineSerialize(DynGround.red.obj[id].Def1))
     DynGround.red.obj[id].Def2 = DynGround.red.DefSpawn:SpawnInZone(DynGround.red.obj[id].Zone, true)
+    DynGround:E("Creating second defensive group for Red zone ID " .. id .. ", name " .. name ..". Group descr : " .. routines.utils.oneLineSerialize(DynGround.red.obj[id].Def2))
   end
   -- Ditto if faction is blue
   -- for blue side, Defensive group can act as FAC for defensive Mission given to players
@@ -489,7 +483,9 @@ for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
     DynGround.blue.obj[id].Def2 = DynGround.blue.DefSpawn:SpawnInZone(DynGround.blue.obj[id].Zone, true)
     DynGround.blue.obj[id].DefSet = SET_GROUP:New()
     DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def1", DynGround.blue.obj[id].Def1)
+    DynGround:E("Creating first defensive group for Blue zone ID " .. id .. ", name " .. name)
     DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def2", DynGround.blue.obj[id].Def2)
+    DynGround:E("Creating second defensive group for Blue zone ID " .. id .. ", name " .. name)
     DynGround.blue.obj[id].DefMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez la defense sur " .. name , "Blue" )
     DynGround.blue.obj[id].DefArea = DETECTION_AREAS:New( DynGround.blue.obj[id].DefSet, 500 ):SetAcceptRange(5000)
     DynGround.blue.obj[id].DefDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].DefMission, Kobu_CC, AttackGroups, DynGround.blue.obj[id].DefArea )
@@ -501,15 +497,21 @@ end
 -- Iterate each Zone per faction to create offensive groups to send toward the opposing ennemy faction Zone (same ID)
 for id, objData in pairs(DynGround.red.obj) do
   local nmeZone = DynGround.blue.obj[id].Zone
+  local nmeZoneName = DynGround.blue.obj[id].ZoneName
   DynGround.red.obj[id].Off = DynGround.red.OffSpawn:SpawnInZone(DynGround.red.obj[id].Zone)
-  DynGround.red.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "line" )
+  DynGround:E("Creating offensive group for Red zone ID " .. id .. ", attacking " .. DynGround.blue.obj[id].ZoneName)
+  DynGround.red.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "On Road" )
+  DynGround.red.obj[id].OffSet = SET_GROUP:New()
+  DynGround.red.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.red.obj[id].Off)
+  DynGround.red.obj[id].OffArea = DETECTION_AREAS:New( DynGround.red.obj[id].OffSet, 500 ):SetAcceptRange(5000)
 end
 -- for blue, Offensive group can ac as FAC for Offensive Support mission given to players
 for id, objData in pairs(DynGround.blue.obj) do
   local nmeZone = DynGround.red.obj[id].Zone
   local nmeZoneName = DynGround.red.obj[id].ZoneName
   DynGround.blue.obj[id].Off = DynGround.blue.OffSpawn:SpawnInZone(DynGround.blue.obj[id].Zone)
-  DynGround.blue.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "line" )
+  DynGround:E("Creating offensive group for Blue zone ID " .. id .. ", attacking " .. nmeZoneName)
+  DynGround.blue.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "On Road" )
   DynGround.blue.obj[id].OffSet = SET_GROUP:New()
   DynGround.blue.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.blue.obj[id].Off)
   DynGround.blue.obj[id].OffMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez l'attaque sur " .. nmeZoneName , "Blue" )
