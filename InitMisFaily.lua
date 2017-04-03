@@ -95,9 +95,9 @@ RndMission = MISSION:New(Kobu_CC, "Attaque au sol", "Primary", "Support A2G Zone
 FACSet = SET_GROUP:New():FilterPrefixes( "Template_Blue_FAC" ):FilterStart()
 FACAreas = DETECTION_AREAS:New( FACSet, 5000, 1000 )
 -- FACAreas:BoundDetectedZones()
-AttackPrefixes = { "8.Ka50", "2.A10C", "3.L39", "5.SU25", "8.1Gazelle", "8.3Gazelle", "8.3Ka50", "8.GAZELLE", }
+AttackPrefixes = { "8.Ka50", "2.A10C", "3.L39", "5.SU25", "8.1Gazelle", "8.3Gazelle", "8.3Ka50", "8.GAZELLE", "8.4.Ka50"}
 AttackGroups = SET_GROUP:New():FilterPrefixes( AttackPrefixes ):FilterStart()
-TaskDispatcher = TASK_A2G_DISPATCHER:New( RndMission, Kobu_CC, AttackGroups, FACAreas )
+TaskDispatcher = TASK_A2G_DISPATCHER:New( RndMission, AttackGroups, FACAreas )
 function RandomGroundObj()
   RndGrdObj[#RndGrdObj + 1] = {}
   RndGrdObj[#RndGrdObj].SetAGTargets = SET_UNIT:New()
@@ -488,7 +488,7 @@ for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
     DynGround:E("Creating second defensive group for Blue zone ID " .. id .. ", name " .. name)
     DynGround.blue.obj[id].DefMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez la defense sur " .. name , "Blue" )
     DynGround.blue.obj[id].DefArea = DETECTION_AREAS:New( DynGround.blue.obj[id].DefSet, 500 ):SetAcceptRange(5000)
-    DynGround.blue.obj[id].DefDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].DefMission, Kobu_CC, AttackGroups, DynGround.blue.obj[id].DefArea )
+    DynGround.blue.obj[id].DefDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].DefMission, AttackGroups, DynGround.blue.obj[id].DefArea )
   end
   
 
@@ -505,7 +505,7 @@ for id, objData in pairs(DynGround.red.obj) do
   DynGround.red.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.red.obj[id].Off)
   DynGround.red.obj[id].OffArea = DETECTION_AREAS:New( DynGround.red.obj[id].OffSet, 500 ):SetAcceptRange(5000)
 end
--- for blue, Offensive group can ac as FAC for Offensive Support mission given to players
+-- for blue, Offensive group can act as FAC for Offensive Support mission given to players
 for id, objData in pairs(DynGround.blue.obj) do
   local nmeZone = DynGround.red.obj[id].Zone
   local nmeZoneName = DynGround.red.obj[id].ZoneName
@@ -516,5 +516,12 @@ for id, objData in pairs(DynGround.blue.obj) do
   DynGround.blue.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.blue.obj[id].Off)
   DynGround.blue.obj[id].OffMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez l'attaque sur " .. nmeZoneName , "Blue" )
   DynGround.blue.obj[id].OffArea = DETECTION_AREAS:New( DynGround.blue.obj[id].OffSet, 500 ):SetAcceptRange(5000)
-  DynGround.blue.obj[id].OffDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].OffMission, Kobu_CC, AttackGroups, DynGround.blue.obj[id].OffArea )
+  DynGround.blue.obj[id].OffDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].OffMission, AttackGroups, DynGround.blue.obj[id].OffArea )
 end
+Spawn_BLUE_AFAC_1 = SPAWN:NewWithAlias("Template BLUE AFAC 1", "Spawned BLUE AFAC 1"):InitLimit(1,1):InitRepeat()
+Spawn_BLUE_AFAC_1:SpawnScheduled( 2400 , 0 )
+Set_Group_BLUE_AFAC_1 = SET_GROUP:New():FilterPrefixes("Spawned BLUE AFAC"):FilterStart()
+Mission_AFAC_1 = MISSION:New(Kobu_CC,"Zone FARP East","Primary","Repondez aux appels des AFAC de la FARP","Blue")
+Detection_AFAC_1 = DETECTION_TYPES:New(Set_Group_BLUE_AFAC_1):SetAcceptRange(5000)
+Dispatcher_AFAC_1 = TASK_A2G_DISPATCHER:New(Mission_AFAC_1, AttackGroups, Detection_AFAC_1)
+
