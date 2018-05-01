@@ -44,7 +44,7 @@ end
 
 Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Table[1] ):InitRandomizeTemplate( Spawn_WWII.Red.CAP.Table ):InitCleanUp( 120 )
 
-WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
+-- WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody Ground Control" )
 
 -- WWII_Blue_Mission_CAP = MISSION:New( WWII_Blue_CC, "CAP MinVody area", "Primary", "Patrol Friendly airspace", "Blue" )
 
@@ -58,7 +58,7 @@ WWII_Blue_CC = COMMANDCENTER:New( STATIC:FindByName( "WWII_BLUE_CC" ), "MinVody 
 -- Spawn_WWII.Red.CAP.Spawn = SPAWN:New( Spawn_WWII.Red.CAP.Set[1] )
 
 
-Kobu_CC = COMMANDCENTER:New( GROUP:FindByName( "CC_SENAKI" ), "Senaki Ground Control" )
+Kobu_CC = COMMANDCENTER:New( GROUP:FindByName( "CC_SENAKI" ), "Vaziani Command" )
 -- Kobu_CAP_MISSION = MISSION:New ( WWII_Blue_CC, "CAP Kobuleti area", "Primary", "Intercept ennemies", "Blue" )
 SetGroupKobu = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue" ):FilterStart()
 
@@ -144,7 +144,7 @@ Spawn_FW190 = SPAWN:New("Template FW190")
 Spawn_Mig15 = SPAWN:New("Template Mig15")
 Spawn_F86 = SPAWN:New("Template F86")
 Spawn_Blue_P51 = SPAWN:New("Template blue P51")
-Spawn_Blue_bf109 = SPAWN:New("Template blue Bf109")
+-- Spawn_Blue_bf109 = SPAWN:New("Template blue Bf109")
 Spawn_Blue_fw190 = SPAWN:New("Template blue FW190")
 Spawn_Kuta_SAM = SPAWN:New("Template Kutaisi SAM")
 Spawn_Kuta_1 = SPAWN:New("Template Kutaisi 1")
@@ -155,6 +155,13 @@ Spawn_Kuta_5 = SPAWN:New("Template Kutaisi 5")
 Spawn_Sukh_Mi8 = SPAWN:New("Template Sukh Mi8")
 Spawn_Sukh_Ka50 = SPAWN:New("Template Sukh Ka50")
 Spawn_Gud_Su25T = SPAWN:New("Template Gud Su25T")
+Spawn_Mayk_Mig21 = SPAWN:New("template red mig21 maykop")
+Spawn_Dog_Mig21 = SPAWN:New("Template Dogfight Mig21")
+Spawn_Dog_Mig29A = SPAWN:New("Template Dogfight Mig29A")
+Spawn_Dog_Mig29S = SPAWN:New("Template Dogfight Mig29S")
+Spawn_Dog_Su27 = SPAWN:New("Template Dogfight Su27")
+Spawn_Dog_Mirage = SPAWN:New("Template Dogfight Mirage")
+
 
 Zone_Achig = ZONE:New("Achigvara")
 
@@ -168,6 +175,7 @@ Sukh_CAP_Spawn = SPAWN
 	:New('Template CAP Soch 1')
 	:InitRandomizeTemplate( Sukh_CAP_list )
 	:InitCleanUp( 120 )
+	:InitLimit(4, 2)
 	:OnSpawnGroup( 
 		function (SpawnGroup)
 			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( Sukh_CAP_Zone, 5000, 8000, 500, 800 )
@@ -176,7 +184,7 @@ Sukh_CAP_Spawn = SPAWN
 			SpawnGroup.PatrolZone:__Start(5)
 		end
 	)
---	:SpawnScheduled( 1800 , 0 )
+:SpawnScheduled( 1800 , 0 )
 
 SetSukhCAP = SET_GROUP:New():FilterPrefixes( "Template CAP Soch 1#"):FilterStart()
 
@@ -203,32 +211,32 @@ WWII_CAP_Zone_Group = GROUP:FindByName( "WII RED Patrol Zone Group" )
 WWII_Circus_Zone_Group = GROUP:FindByName( "WWII Circus Zone" )
 WWII_CAP_Zone = ZONE_POLYGON:New( "WWII_Polygon" , WWII_CAP_Zone_Group )
 WWII_Circus_Zone = ZONE:New( "ZONE_WWII_MAYSKIY" )
-WWII_CAP_Spawn = SPAWN
-	:New("Template RUS WWII 1")
-	:InitRandomizeTemplate( WWII_CAP_list )
-	:InitCleanUp( 120 )
-	:OnSpawnGroup(
-		function (SpawnGroup)
-			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_CAP_Zone, 3800, 5000, 300, 500 )
-			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
-			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
-			SpawnGroup.PatrolZone:__Start(5)
+-- WWII_CAP_Spawn = SPAWN
+-- 	:New("Template RUS WWII 1")
+-- 	:InitRandomizeTemplate( WWII_CAP_list )
+-- 	:InitCleanUp( 120 )
+-- 	:OnSpawnGroup(
+-- 		function (SpawnGroup)
+-- 			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_CAP_Zone, 3800, 5000, 300, 500 )
+-- 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
+-- 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
+-- 			SpawnGroup.PatrolZone:__Start(5)
 --			SpawnGroup:OptionROEWeaponFree()
-			SpawnGroup.TargetSet = SET_UNIT:New()
-			local DCSGroup = Group.getByName( SpawnGroup.GroupName )
-			for unitID, unitData in pairs(DCSGroup:getUnits()) do
-				_DATABASE:AddUnit( unitData:getName() )
-				local MooseUnit = UNIT:Find( unitData )
-				SpawnGroup.TargetSet:AddUnit( MooseUnit )
-			end
-			Kobu_Missions[#Kobu_Missions + 1] = {}
-			local missionName = "CAP MinVody area (" .. #Kobu_Missions ..")"
-			local taskName = "Intercept (" .. #Kobu_Missions .. ")"
-			Kobu_Missions[#Kobu_Missions].Mission = MISSION:New ( WWII_Blue_CC, missionName, "Primary", "Intercept ennemies", "Blue" )
-			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, taskName, SpawnGroup.TargetSet ):SetTimeOut( 1800 )
-			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
-		end
-	)
+-- 			SpawnGroup.TargetSet = SET_UNIT:New()
+-- 			local DCSGroup = Group.getByName( SpawnGroup.GroupName )
+-- 			for unitID, unitData in pairs(DCSGroup:getUnits()) do
+-- 				_DATABASE:AddUnit( unitData:getName() )
+-- 				local MooseUnit = UNIT:Find( unitData )
+-- 				SpawnGroup.TargetSet:AddUnit( MooseUnit )
+-- 			end
+-- 			Kobu_Missions[#Kobu_Missions + 1] = {}
+-- 			local missionName = "CAP MinVody area (" .. #Kobu_Missions ..")"
+-- 			local taskName = "Intercept (" .. #Kobu_Missions .. ")"
+-- 			Kobu_Missions[#Kobu_Missions].Mission = MISSION:New ( WWII_Blue_CC, missionName, "Primary", "Intercept ennemies", "Blue" )
+-- 			Kobu_Missions[#Kobu_Missions].Task = TASK_INTERCEPT:New( Kobu_Missions[#Kobu_Missions].Mission, SetGroupKobu, taskName, SpawnGroup.TargetSet ):SetTimeOut( 1800 )
+-- 			Kobu_Missions[#Kobu_Missions].Mission:AddTask( Kobu_Missions[#Kobu_Missions].Task )
+-- 		end
+-- 	)
 --	:SpawnScheduled( 1800 , 0 )
 -- 	:SpawnScheduled( 120 , 0 )
 
@@ -237,7 +245,7 @@ Circus_RED_SPAWN = SPAWN
 	:InitCleanUp ( 120 )
 	:OnSpawnGroup(
 		function (SpawnGroup)
-			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 5000, 300, 500 )
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 3000, 300, 500 )
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.2 , 600 )
 			SpawnGroup.PatrolZone:__Start(5)
@@ -248,7 +256,7 @@ Circus_BLUE_SPAWN = SPAWN
 	:InitCleanUp ( 120 )
 	:OnSpawnGroup(
 		function (SpawnGroup)
-			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 5000, 300, 500 )
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 3000, 300, 500 )
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.2 , 600 )
 			SpawnGroup.PatrolZone:__Start(5)
@@ -277,6 +285,57 @@ function StartCircus(  )
   FollowGroupSet:Flush()
 
   local LeaderUnit = Circus_GroupList[1]:GetUnit(1)
+
+  local LargeFormation = AI_FORMATION:New( LeaderUnit, FollowGroupSet, "Large Formation", "Briefing" ):TestSmokeDirectionVector(false)
+
+  LargeFormation:__Start( 1 )
+end
+
+Korea_RED_SPAWN = SPAWN
+	:New( "Template RUS Korea" )
+	:InitCleanUp ( 120 )
+	:OnSpawnGroup(
+		function (SpawnGroup)
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 3000, 300, 500 )
+			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
+			SpawnGroup.PatrolZone:ManageFuel( 0.2 , 600 )
+			SpawnGroup.PatrolZone:__Start(5)
+		end
+	)
+Korea_BLUE_SPAWN = SPAWN
+	:New( "Template BLUE Korea" )
+	:InitCleanUp ( 120 )
+	:OnSpawnGroup(
+		function (SpawnGroup)
+			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( WWII_Circus_Zone, 2500, 3000, 300, 500 )
+			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
+			SpawnGroup.PatrolZone:ManageFuel( 0.2 , 600 )
+			SpawnGroup.PatrolZone:__Start(5)
+		end
+	)
+Korea_Sched = {}
+Korea_GroupList = {}
+
+function StartKorea(  )
+	for i = 0, 3 do
+--		Circus_Sched[#Circus_Sched + 1] = SCHEDULER:New( Circus_RED_SPAWN,
+--			function ( Object, Timer )
+--				Object:Spawn()
+--			end, { i }, 1 + ( i * 10 )
+--		)
+--		Circus_Sched[#Circus_Sched + 1] = SCHEDULER:New( Circus_BLUE_SPAWN,
+--			function ( Object, Timer )
+--				Object:Spawn()
+--			end, { i }, 1 + ( i * 10 )
+--		)
+		Korea_GroupList[ #Korea_GroupList + 1 ] = Korea_RED_SPAWN:Spawn()
+		Korea_GroupList[ #Korea_GroupList + 1 ] = Korea_BLUE_SPAWN:Spawn()
+	end
+  local FollowGroupSet = SET_GROUP:New():FilterCategories("plane"):FilterCoalitions("blue"):FilterPrefixes("Template BLUE Korea"):FilterStart()
+
+  FollowGroupSet:Flush()
+
+  local LeaderUnit = Korea_GroupList[1]:GetUnit(1)
 
   local LargeFormation = AI_FORMATION:New( LeaderUnit, FollowGroupSet, "Large Formation", "Briefing" ):TestSmokeDirectionVector(false)
 
@@ -352,15 +411,18 @@ local function CleanSAM()
 	)
 end
 
+
+
 Spawn_Red_CSAR = SPAWN:New ("Template_RED_CSAR")
 ZONE_Red_CSAR_1 = ZONE:New("Fight_Zone")
 CSAR_1 = CSAR_HANDLER:New( ZONE_Red_CSAR_1, { Spawn_Red_CSAR, } )
-
-MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane" )
+MenuCoalitionBlue = MENU_COALITION:New( coalition.side.BLUE, "Coalition")
+MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane", MenuCoalitionBlue )
 MenuSpawnPlaneM29_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_1 )
 MenuSpawnPlaneM29_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_2 )
 MenuSpawnPlaneM23_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig23", MenuSpawnPlane, SpawnNewGroup, Spawn_M23_1 )
 MenuSpawnPlaneM23_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig23", MenuSpawnPlane, SpawnNewGroup, Spawn_M23_2 )
+MenuSpawnPlaneM21_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig21 Maykop", MenuSpawnPlane, SpawnNewGroup, Spawn_Mayk_Mig21 )
 MenuSpawnPlaneOther = MENU_COALITION:New( coalition.side.BLUE, "Other", MenuSpawnPlane)
 MenuSpawnPlaneP51 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 P51D", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_P51 )
 MenuSpawnPlaneFW190 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 FW-190 D9", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_FW190 )
@@ -368,6 +430,8 @@ MenuSpawnPlaneBf109 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 
 MenuSpawnPlaneMig15 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig15Bis", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Mig15 )
 MenuSpawnPlaneF86 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 F86-F", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_F86 )
 MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Un Grand Cirque!", MenuSpawnPlaneOther, StartCircus )
+MenuSpawnKorea = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Korean Furball", MenuSpawnPlaneOther, StartKorea )
+-- MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Bf 109 Practice target", MenuSpawnPlaneOther, SpawnPractice109 )
 MenuSpawnPlaneMi8 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Mi8", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Mi8 )
 MenuSpawnPlaneKa50 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Ka50", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Ka50 )
 MenuSpawnPlaneSu25T = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Su25T", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Gud_Su25T )
@@ -377,7 +441,7 @@ MenuSpawnPlaneStartSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "De
 MenuSpawnPlaneClearSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detruire les CAP ennemis en vol", MenuSpawnPlaneControl,  ClearSetGroup, SetSukhCAP )
 
 
-MenuSpawnGround = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Ground Target" )
+MenuSpawnGround = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Ground Target", MenuCoalitionBlue )
 MenuSpawnGGroup1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Armor chemin 1", MenuSpawnGround, SpawnNewGroup, Spawn_Ground_1 )
 MenuSpawnGGroup2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Armor chemin 2", MenuSpawnGround, SpawnNewGroup, Spawn_Ground_2 )
 MenuSpawnGGroup4 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Take Kutaisi scenario - no SA19", MenuSpawnGround, SpawnKutaisi, false )
@@ -387,33 +451,66 @@ MenuSpawnGroundControl = MENU_COALITION:New( coalition.side.BLUE, "Controle des 
 MenuSpawnGroundClearRnd = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detruire les troupes des objectifs random", MenuSpawnGroundControl, ClearGroundObj )
 
 
-MenuSpawnSAM = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy SAM" )
-MenuSpawnSA19_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM Position 1", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_1, Zone_SA19_1 )
-MenuSpawnSA19_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM Position 2", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_2, Zone_SA19_2 )
-MenuSpawnSA10_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM SA6", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_5, Zone_KUB )
-MenuSpawnSA10_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM SA11", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_4, Zone_BUK )
-MenuSpawnSA10_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM SA10 Gudauta", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_3, Zone_SA10 )
-MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn GCI RED", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
-MenuCleanSAM = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Destroy all SAMs", MenuSpawnSAM, CleanSAM )
+--MenuSpawnSAM = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy SAM" )
+--MenuSpawnSA19_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM Position 1", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_1, Zone_SA19_1 )
+--MenuSpawnSA19_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM Position 2", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_2, Zone_SA19_2 )
+--MenuSpawnSA10_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM SA6", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_5, Zone_KUB )
+--MenuSpawnSA10_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM SA11", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_4, Zone_BUK )
+--MenuSpawnSA10_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn SAM SA10 Gudauta", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_SAM_3, Zone_SA10 )
+--MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn GCI RED", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
+--MenuCleanSAM = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Destroy all SAMs", MenuSpawnSAM, CleanSAM )
 
-MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker" )
+MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker", MenuCoalitionBlue )
 MenuSpawnPlaneTankerM2K = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker M2K", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_M2K )
 MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker KC135", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Other )
 
-MenuSpawnFriendly = MENU_COALITION:New( coalition.side.BLUE, "Spawn Friendly Units" )
-MenuSpawnFP51 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn blue P51 over Senakhi", MenuSpawnFriendly, SpawnNewGroup, Spawn_Blue_P51 )
-MenuSpawnFbf109 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn blue Bf109 over Senakhi", MenuSpawnFriendly, SpawnNewGroup, Spawn_Blue_bf109 )
-MenuSpawnFfw190 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn blue FW190 over Senakhi", MenuSpawnFriendly, SpawnNewGroup, Spawn_Blue_fw190 )
+MenuSpawnDogfight = MENU_COALITION:New( coalition.side.BLUE, "Dogfight")
+MenuSpawnDogM21 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mig21", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mig21 )
+MenuSpawnDogM29A = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mig29A", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mig29A )
+MenuSpawnDogM29S = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mig29S", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mig29S )
+MenuSpawnDogSu27 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Su27", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Su27 )
+MenuSpawnDogMirage = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mirage", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mirage )
+
 
 MenuSpawnRUS = MENU_COALITION:New( coalition.side.RED, "Spawn Assets" )
 MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.RED, "Spawn GCI", MenuSpawnRUS, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
 
+-- WWII Target Practice Menu
+SetBlueWWIIPlanes = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue"):FilterStart()
+Spawn_RED_109_Tgt = SPAWN:New("Template WWII RED Single 109")
+local function SpawnPractice109( playerClient )
+	local playerGroup = playerClient
+	local name = playerGroup:GetName()
+	local radius = 500
+	local playerZone = ZONE_GROUP:New( name .. "_zone_practice", playerGroup , radius)
+	local nmeGroup = Spawn_RED_109_Tgt:SpawnInZone(playerZone, true)
+end
+
+for clientName, clientData in pairs( SetBlueWWIIPlanes.Set ) do
+	BASE:E({ clientName, routines.utils.oneLineSerialize(clientData)})
+	clientData.MenuGroup = MENU_GROUP:New( clientData, "Group")
+	clientData.MenuSpawnDogfight = MENU_GROUP_COMMAND:New( clientData, "Bf 109 Practice target", clientData.MenuGroup, SpawnPractice109, clientData )
+
+end
+
+for clientName, clientData in pairs( SetClientWWII.Set ) do
+	BASE:E({ clientName, routines.utils.oneLineSerialize(clientData)})
+--	clientData.MenuClient = MENU_CLIENT:New( clientData, "Client")
+--	clientData.MenuSpawnDogfight2 = MENU_CLIENT_COMMAND:New( clientData, "Bf 109 Practice target", clientData.MenuClient, SpawnPractice109, clientData:GetGroup() )
+
+end
 
 
 -- Dynamic ground movement (Kutaisi - Kashuri region) begins here
 -- DynGround holds all variable and functions for Dynamic Ground war stuff
 SetBlueObj = SET_GROUP:New():FilterPrefixes( "Template_BLUE_OBJ" ):FilterOnce()
 SetBlueObj:Flush()
+
+SetBlueOff = SET_GROUP:New():FilterPrefixes( "GROUP_DYN_B" ):FilterOnce()
+SetBlueOff:Flush()
+SetRedOff = SET_GROUP:New():FilterPrefixes( "GROUP_DYN_R" ):FilterOnce()
+SetRedOff:Flush()
+
 
 DynGround = BASE:New()
 
@@ -435,6 +532,7 @@ DynGround.red = {}
 DynGround.blue = {}
 DynGround.red.obj = {}
 DynGround.blue.obj = {}
+DynGround.obj = {}
 
 -- Templates list the group templates use for Spawning
 DynGround.red.Templates = {}
@@ -446,11 +544,25 @@ for groupName, groupData in pairs( SetBlueObj.Set ) do
   DynGround.blue.Templates[#DynGround.blue.Templates + 1] = groupName
 end
 
+-- Offensive Ghost Units for spawning offensive groups
+DynGround.red.OffGroups = {}
+DynGround.blue.OffGroups = {}
+for groupName, groupData in pairs( SetRedOff.Set ) do
+  DynGround.red.OffGroups[groupName] = SPAWN:New(groupName):InitRandomizeTemplate(DynGround.red.Templates):InitLimit(20, 0)
+	DynGround:E("Red OffTemplate created, name " .. groupName ..". Template descr : " .. routines.utils.oneLineSerialize(DynGround.red.OffGroups[groupName]))
+end
+for groupName, groupData in pairs( SetBlueOff.Set ) do
+  DynGround.blue.OffGroups[groupName] = SPAWN:New(groupName):InitRandomizeTemplate(DynGround.blue.Templates):InitLimit(20, 0)
+end
+
+DynGround.red.SetSpawnedOff = SET_GROUP:New():FilterPrefixes( "GROUP_DYN_R" ):FilterStart()
+
+
 -- DefSpawn & OffSpawn are the SPAWN objects for defensive and offensive units of each zone
 DynGround.red.DefSpawn = SPAWN:New(DynGround.red.Templates[1]):InitRandomizeTemplate(DynGround.red.Templates):InitRandomizeUnits(true, 300, 100)
-DynGround.red.OffSpawn = SPAWN:New(DynGround.red.Templates[1]):InitRandomizeTemplate(DynGround.red.Templates):InitRandomizeUnits(true, 300, 100)
+-- DynGround.red.OffSpawn = SPAWN:New(DynGround.red.Templates[1]):InitRandomizeTemplate(DynGround.red.Templates):InitRandomizeUnits(true, 300, 100)
 DynGround.blue.DefSpawn = SPAWN:New(DynGround.blue.Templates[1]):InitRandomizeTemplate(DynGround.blue.Templates):InitRandomizeUnits(true, 300, 100)
-DynGround.blue.OffSpawn = SPAWN:New(DynGround.blue.Templates[1]):InitRandomizeTemplate(DynGround.blue.Templates):InitRandomizeUnits(true, 300, 100)
+-- DynGround.blue.OffSpawn = SPAWN:New(DynGround.blue.Templates[1]):InitRandomizeTemplate(DynGround.blue.Templates):InitRandomizeUnits(true, 300, 100)
 
 
 -- Iterate the SET_GROUP listing all the zones defined in ME
@@ -486,42 +598,127 @@ for groupName, groupData in pairs( DynGround.GroupZoneSet.Set ) do
     DynGround:E("Creating first defensive group for Blue zone ID " .. id .. ", name " .. name)
     DynGround.blue.obj[id].DefSet:Add( name .. "_zone_def2", DynGround.blue.obj[id].Def2)
     DynGround:E("Creating second defensive group for Blue zone ID " .. id .. ", name " .. name)
-    DynGround.blue.obj[id].DefMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez la defense sur " .. name , "Blue" )
+--    DynGround.blue.obj[id].DefMission = MISSION:New(Kobu_CC, name .. " defense", "Primary", "Supportez la defense sur " .. name , "Blue" )
     DynGround.blue.obj[id].DefArea = DETECTION_AREAS:New( DynGround.blue.obj[id].DefSet, 500 ):SetAcceptRange(5000)
-    DynGround.blue.obj[id].DefDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].DefMission, AttackGroups, DynGround.blue.obj[id].DefArea )
+--    DynGround.blue.obj[id].DefDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].DefMission, AttackGroups, DynGround.blue.obj[id].DefArea )
   end
-  
+  -- If Faction is neutral, Zone is the objective for both sides
+	if splitSub[1]=="N" then
+		DynGround.obj[id] = ZONE_GROUP:New(name.."_Objective", groupData, radius)
+	end
 
 end
 
 -- Iterate each Zone per faction to create offensive groups to send toward the opposing ennemy faction Zone (same ID)
 for id, objData in pairs(DynGround.red.obj) do
-  local nmeZone = DynGround.blue.obj[id].Zone
-  local nmeZoneName = DynGround.blue.obj[id].ZoneName
-  DynGround.red.obj[id].Off = DynGround.red.OffSpawn:SpawnInZone(DynGround.red.obj[id].Zone)
-  DynGround:E("Creating offensive group for Red zone ID " .. id .. ", attacking " .. DynGround.blue.obj[id].ZoneName)
-  DynGround.red.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "On Road" )
-  DynGround.red.obj[id].OffSet = SET_GROUP:New()
-  DynGround.red.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.red.obj[id].Off)
-  DynGround.red.obj[id].OffArea = DETECTION_AREAS:New( DynGround.red.obj[id].OffSet, 500 ):SetAcceptRange(5000)
+	local tgtZone = DynGround.blue.obj[id].Zone
+	local offGroupName = "GROUP_DYN_R_" .. id
+	DynGround.red.OffGroups[offGroupName]:OnSpawnGroup(
+		function (SpawnGroup)
+			DynGround:E("Red Off group created : " .. routines.utils.oneLineSerialize(SpawnGroup))
+			SpawnGroup:TaskRouteToZone( tgtZone, false, 25, "On Road" )
+		end
+	)
+	DynGround.red.OffGroups[offGroupName]:SpawnScheduled( 1800 , 0 )
+	DynGround:E("Created offensive group for Red zone ID " .. id .. ", name " .. offGroupName)
+
+--  local nmeZone = DynGround.blue.obj[id].Zone
+--  local nmeZoneName = DynGround.blue.obj[id].ZoneName
+ -- DynGround.red.obj[id].Off = DynGround.red.OffSpawn:SpawnInZone(DynGround.red.obj[id].Zone)
+ -- DynGround:E("Creating offensive group for Red zone ID " .. id .. ", attacking " .. DynGround.blue.obj[id].ZoneName)
+--  DynGround.red.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "On Road" )
+--  DynGround.red.obj[id].OffSet = SET_GROUP:New()
+--  DynGround.red.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.red.obj[id].Off)
+--  DynGround.red.obj[id].OffArea = DETECTION_AREAS:New( DynGround.red.obj[id].OffSet, 500 ):SetAcceptRange(5000)
 end
+-- DynGround.red.OffGroups["GROUP_DYN_R_1"]:SpawnScheduled( 1200 , 0 )
+-- DynGround.red.OffGroups["GROUP_DYN_R_2"]:SpawnScheduled( 1200 , 0 )
+-- DynGround.red.OffGroups["GROUP_DYN_R_3"]:SpawnScheduled( 1200 , 0 )
+
 -- for blue, Offensive group can act as FAC for Offensive Support mission given to players
 for id, objData in pairs(DynGround.blue.obj) do
-  local nmeZone = DynGround.red.obj[id].Zone
-  local nmeZoneName = DynGround.red.obj[id].ZoneName
-  DynGround.blue.obj[id].Off = DynGround.blue.OffSpawn:SpawnInZone(DynGround.blue.obj[id].Zone)
-  DynGround:E("Creating offensive group for Blue zone ID " .. id .. ", attacking " .. nmeZoneName)
-  DynGround.blue.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "On Road" )
-  DynGround.blue.obj[id].OffSet = SET_GROUP:New()
-  DynGround.blue.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.blue.obj[id].Off)
-  DynGround.blue.obj[id].OffMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez l'attaque sur " .. nmeZoneName , "Blue" )
-  DynGround.blue.obj[id].OffArea = DETECTION_AREAS:New( DynGround.blue.obj[id].OffSet, 500 ):SetAcceptRange(5000)
-  DynGround.blue.obj[id].OffDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].OffMission, AttackGroups, DynGround.blue.obj[id].OffArea )
+	local tgtZone = DynGround.red.obj[id].Zone
+	local offGroupName = "GROUP_DYN_B_" .. id
+	DynGround:E("Creating offensive group for Blue zone ID " .. id .. ", name " .. offGroupName)
+	DynGround.blue.OffGroups[offGroupName]:OnSpawnGroup(
+		function (SpawnGroup)
+			DynGround:E("Blue Off group created : " .. routines.utils.oneLineSerialize(SpawnGroup))
+			SpawnGroup:TaskRouteToZone( tgtZone, false, 25, "On Road" )
+		end
+	)
+	DynGround.blue.OffGroups[offGroupName]:SpawnScheduled( 1800 , 0 )
+	
+--  local nmeZone = DynGround.red.obj[id].Zone
+--  local nmeZoneName = DynGround.red.obj[id].ZoneName
+--  DynGround.blue.obj[id].Off = DynGround.blue.OffSpawn:SpawnInZone(DynGround.blue.obj[id].Zone)
+--  DynGround:E("Creating offensive group for Blue zone ID " .. id .. ", attacking " .. nmeZoneName)
+--  DynGround.blue.obj[id].Off:TaskRouteToZone( nmeZone, false, 40, "On Road" )
+--  DynGround.blue.obj[id].OffSet = SET_GROUP:New()
+--  DynGround.blue.obj[id].OffSet:Add( nmeZoneName .. "_zone_off", DynGround.blue.obj[id].Off)
+--  DynGround.blue.obj[id].OffMission = MISSION:New(Kobu_CC, "Air to Ground", "Primary", "Supportez l'attaque sur " .. nmeZoneName , "Blue" )
+--  DynGround.blue.obj[id].OffArea = DETECTION_AREAS:New( DynGround.blue.obj[id].OffSet, 500 ):SetAcceptRange(5000)
+--  DynGround.blue.obj[id].OffDispatcher = TASK_A2G_DISPATCHER:New( DynGround.blue.obj[id].OffMission, AttackGroups, DynGround.blue.obj[id].OffArea )
 end
 Spawn_BLUE_AFAC_1 = SPAWN:NewWithAlias("Template BLUE AFAC 1", "Spawned BLUE AFAC 1"):InitLimit(1,1):InitRepeat()
 Spawn_BLUE_AFAC_1:SpawnScheduled( 2400 , 0 )
+Spawn_BLUE_AFAC_2 = SPAWN:NewWithAlias("Template BLUE AFAC 2", "Spawned BLUE AFAC 2"):InitLimit(1,1):InitRepeat()
+Spawn_BLUE_AFAC_2:SpawnScheduled( 2400 , 0 )
+Spawn_BLUE_AFAC_3 = SPAWN:NewWithAlias("Template BLUE AFAC 3", "Spawned BLUE AFAC 3"):InitLimit(1,1):InitRepeat()
+Spawn_BLUE_AFAC_3:SpawnScheduled( 2400 , 0 )
 Set_Group_BLUE_AFAC_1 = SET_GROUP:New():FilterPrefixes("Spawned BLUE AFAC"):FilterStart()
-Mission_AFAC_1 = MISSION:New(Kobu_CC,"Zone FARP East","Primary","Repondez aux appels des AFAC de la FARP","Blue")
+-- Mission_AFAC_1 = MISSION:New(Kobu_CC,"Zone FARP East","Primary","Repondez aux appels des AFAC de la FARP","Blue")
 Detection_AFAC_1 = DETECTION_TYPES:New(Set_Group_BLUE_AFAC_1):SetAcceptRange(5000)
-Dispatcher_AFAC_1 = TASK_A2G_DISPATCHER:New(Mission_AFAC_1, AttackGroups, Detection_AFAC_1)
+-- Dispatcher_AFAC_1 = TASK_A2G_DISPATCHER:New(Mission_AFAC_1, AttackGroups, Detection_AFAC_1)
+Schedule_AFAC = SCHEDULER:New(nil, 
+	function ( Object, Timer)
+		for facName, facData in pairs(Set_Group_BLUE_AFAC_1.set) do
+			for groupName, groupData in pairs(DynGround.red.SetSpawnedOff.set) do
+				BASE:E("Attaching FAC to target group : JTAC:" .. routines.utils.oneLineSerialize(facData) .. ", Target: " .. routines.utils.oneLineSerialize(groupData))
+				facData:TaskFAC_AttackGroup(groupData)
+			end
+		end
+	end, {}, 120, 120
+)
+Schedule_AFAC:Start()
 
+
+Warzone = BASE:New()
+Warzone.ClassName = "MAIN_WARZONE"
+Warzone.red = {}
+Warzone.blue = {}
+Warzone.red.DefSpawn = SPAWN:New(DynGround.red.Templates[1]):InitRandomizeTemplate(DynGround.red.Templates):InitRandomizeUnits(true, 300, 100)
+Warzone.blue.DefSpawn = SPAWN:New(DynGround.blue.Templates[1]):InitRandomizeTemplate(DynGround.blue.Templates):InitRandomizeUnits(true, 300, 100)
+
+Warzone.North = {}
+Warzone.North.ZoneSet = SET_GROUP:New():FilterPrefixes( "ZONE_CAPTURE_N" ):FilterOnce()
+Warzone.North.RedIndex = 2
+Warzone.North.Zones = {}
+Warzone.North.ZoneCaptureCoalition = {}
+for groupName, groupData in pairs( Warzone.North.ZoneSet.Set ) do
+	local tmpSub = string.gsub(groupName, "ZONE_CAPTURE_N_", "")
+	local splitSub = csplit(tmpSub, "_")
+	local radius = tonumber(splitSub[3])
+	local name = splitSub[2]
+	local id = tonumber(splitSub[1])
+	Warzone.North.Zones[id] = ZONE_GROUP:New(name .. "_Zone", groupData, radius)
+	if id <= Warzone.North.RedIndex then
+		Warzone.North.ZoneCaptureCoalition[id] = {}
+		Warzone.North.ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone.North.Zones[id] , coalition.side.RED )
+		Warzone.North.ZoneCaptureCoalition[id].zcc:Mark()
+		function Warzone.North.ZoneCaptureCoalition[id].zcc.onenterEmpty()
+			local Coalition = self:GetCoalition()
+			local ZoneName = self:GetZoneName()
+			if Coalition == coalition.side.RED then
+				Warzone.red.DefSpawn:SpawnInZone(Warzone.North.Zones[id], true)
+			end
+			if Coalition == coalition.side.BLUE then
+				Warzone.blue.DefSpawn:SpawnInZone(Warzone.North.Zones[id], true)
+			end
+		end
+		Warzone.North.ZoneCaptureCoalition[id].zcc:Empty()
+		Warzone.North.ZoneCaptureCoalition[id].zcc:Mark()
+	else
+		Warzone.North.ZoneCaptureCoalition[id] = ZONE_CAPTURE_COALITION:New( Warzone.North.Zones[id] , coalition.side.BLUE )
+		Warzone.North.ZoneCaptureCoalition[id]:Mark()
+	end
+end
