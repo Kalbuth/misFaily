@@ -167,6 +167,12 @@ do
    return self
   end
   
+	WARZONE_HANDLER = {
+		ClassName = "WARZONE_HANDLER"
+	}
+	
+	
+	
   function csplit(str,sep)
    local ret={}
    local n=1
