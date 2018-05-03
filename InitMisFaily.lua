@@ -397,6 +397,46 @@ SetRedOff:Flush()
 SetRedObj = SET_GROUP:New():FilterPrefixes( "Template_RED_OBJ" ):FilterOnce()
 SetBlueObj = SET_GROUP:New():FilterPrefixes( "Template_BLUE_OBJ" ):FilterOnce()
 
+CallSigns = {
+	[1]= "Axeman",	
+	[2]= "Darknight",
+	[3]= "Warrior",
+	[4]= "Pointer",
+	[5]= "Eyeball",	
+	[6]= "Moonbeam",	
+	[7]= "Whiplash",	
+	[8]= "Finger",	
+	[9]= "Pinpoint",	
+	[10]= "Ferret",	
+	[11]= "Shaba",	
+	[12]= "Playboy",	
+	[13]= "Hammer",	
+	[14]= "Jaguar",	
+	[15]= "Deathstar",	
+	[16]= "Anvil",	
+	[17]= "Firefly",	
+	[18]= "Mantis",
+	[19]= "Badger",
+}
+
+function GenerateReport(DetectedItems, FACName, FACFreq)
+	local Report = "We have troops in contact with the enemy."
+	local Contacts = {}
+	local Count = 0
+	for Id, Item in pairs(DetectedItems) do
+		Count = Count + 1
+		Contacts[Id] = {}
+		Contacts[Id].Text = Item.ThreatText
+		local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
+		Contacts[Id].Coord = Coord:ToStringLLDDM()
+	end
+	Report = Report .. " " .. Count .. " group(s) detected : \n"
+	for Id, Contact in pairs(Contacts) do
+		Report = Report .. "Group " .. Id .. " of " .. Contact.Text .. " at " .. Contact.Coord .. ".\n"
+	end
+	Report = Report .. "You can contact friendly group " .. FACName .. " on frequency " .. FACFreq .. " MHz."
+	return Report
+end
 
 Warzone = BASE:New()
 Warzone.ClassName = "MAIN_WARZONE"
@@ -420,8 +460,18 @@ Warzone.blue.DefSpawn = SPAWN:New(Warzone.blue.Templates[1]):InitRandomizeTempla
 Warzone.North = {}
 Warzone.North.red = {}
 Warzone.North.blue = {}
-Warzone.North.red.OffGroup = SPAWN:New("GROUP_DYN_R_N"):InitRandomizeTemplate(Warzone.red.Templates):InitLimit(20, 0)
-Warzone.North.blue.OffGroup = SPAWN:New("GROUP_DYN_B_N"):InitRandomizeTemplate(Warzone.blue.Templates):InitLimit(20, 0)
+Warzone.North.blue.GroundFreq = 131
+Warzone.North.blue.Transmitter = GROUP:FindByName("RADIO_N")
+--Warzone.North.blue.Radio = RADIO:New(SpawnGroup)
+Warzone.North.blue.Radio = Warzone.North.blue.Transmitter:GetRadio()
+Warzone.North.blue.Radio:SetFileName("beaconsilent.ogg")
+Warzone.North.blue.Radio:SetFrequency(Warzone.North.blue.GroundFreq)
+Warzone.North.blue.Radio:SetModulation(radio.modulation.AM)
+Warzone.North.blue.Radio:SetPower(20)
+Warzone.North.blue.Radio:SetLoop(false)
+Warzone.North.blue.Radio:SetSubtitle("", 0 )
+Warzone.North.red.OffGroup = SPAWN:New("GROUP_DYN_R_N"):InitRandomizeTemplate(Warzone.red.Templates):InitLimit(12, 0)
+Warzone.North.blue.OffGroup = SPAWN:New("GROUP_DYN_B_N"):InitRandomizeTemplate(Warzone.blue.Templates):InitLimit(12, 0)
 Warzone.North.red.SpawnZone = ZONE_GROUP:New("North_Red_Spawn", GROUP:FindByName("GROUP_DYN_R_N"), 500)
 Warzone.North.blue.SpawnZone = ZONE_GROUP:New("North_Blue_Spawn", GROUP:FindByName("GROUP_DYN_B_N"), 500)
 Warzone.North.red.CAS = SPAWN:New("Template_RU_Heli_CAS_N")
@@ -497,7 +547,63 @@ end
 
 Warzone.North.blue.OffGroup:OnSpawnGroup(
 		function (SpawnGroup)
+			SpawnGroup.Frequency = (2600 + math.random(200)) * 100000
+			local Command = { 
+							id = 'SetFrequency', 
+							params = { 
+								frequency = SpawnGroup.Frequency, 
+								modulation = radio.modulation.AM, 
+							} 
+						}
+			SpawnGroup:SetCommand( Command )
+			local Callsign = math.random(19)
+			local Id = math.random(5)
+			SpawnGroup.Callsign = CallSigns[Callsign] .. " " .. Id
+			Command = { 
+							id = 'SetCallsign', 
+							params = { 
+								callname = Callsign, 
+								number = Id, 
+							} 
+						}
+			SpawnGroup:SetCommand( Command )
+			SpawnGroup.Engaged = false
+			SpawnGroup.LastTransmission = 11
 			SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
+			SpawnGroup.TargetZone = Warzone.North.Zones[Warzone.North.RedIndex]
+			SpawnGroup.LocalSet = SET_GROUP:New():AddGroupsByName(SpawnGroup.GroupName)
+			SpawnGroup.Detection = DETECTION_AREAS:New(SpawnGroup.LocalSet, 500)
+			SpawnGroup.Detection:SetAcceptRange( 5000 )
+			SpawnGroup.Detection:InitDetectVisual( true )
+			SpawnGroup.Detection:InitDetectOptical( true )
+			SpawnGroup.Detection.LocalGroup = SpawnGroup.GroupName
+			SpawnGroup.Detection:Start()
+			SpawnGroup.Detection.OnAfterDetect = function (self, From, Event, To)
+				local Count = 0
+				for Index, Value in pairs( self.DetectedObjects ) do
+					Count = Count + 1
+				end
+				if Count > 0 then 
+					if SpawnGroup.Engaged == false then 
+						SpawnGroup.Engaged = true
+						local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
+						SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
+						SpawnGroup:EnRouteTaskFAC( 5000, 5)
+					end
+					if SpawnGroup.LastTransmission > 10 then 
+						SpawnGroup.LastTransmission = -1
+						Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
+						local DetectionReport = GenerateReport(self.DetectedItems, SpawnGroup.Callsign , SpawnGroup.Frequency / 1000000)
+						Warzone.North.blue.Radio:SetSubtitle( DetectionReport, 60 )
+						Warzone.North.blue.Radio:Broadcast()
+					end
+					SpawnGroup.LastTransmission = SpawnGroup.LastTransmission + 1
+				end
+				if ( ( Count == 0 ) and ( SpawnGroup.Engaged == true ) ) then
+					SpawnGroup.Engaged = false
+					SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
+				end
+			end
 		end
 	)
 Warzone.North.blue.OffGroup:SpawnScheduled( 2400 , 0 )
@@ -505,6 +611,30 @@ Warzone.North.blue.OffGroup:SpawnScheduled( 2400 , 0 )
 Warzone.North.red.OffGroup:OnSpawnGroup(
 		function (SpawnGroup)
 			SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex + 1], false, 15, "On Road" )
+			SpawnGroup.TargetZone = Warzone.North.Zones[Warzone.North.RedIndex]
+			SpawnGroup.LocalSet = SET_GROUP:New():AddGroupsByName(SpawnGroup.GroupName)
+			SpawnGroup.Detection = DETECTION_AREAS:New(SpawnGroup.LocalSet, 500)
+			SpawnGroup.Detection:SetAcceptRange( 5000 )
+			SpawnGroup.Detection:InitDetectVisual( true )
+			SpawnGroup.Detection:InitDetectOptical( true )
+			SpawnGroup.Detection.LocalGroup = SpawnGroup.GroupName
+			SpawnGroup.Detection:Start()
+			SpawnGroup.Detection.OnAfterDetect = function (self, From, Event, To)
+				local Count = 0
+				for Index, Value in pairs( self.DetectedObjects ) do
+					Count = Count + 1
+				end
+				if Count > 0 then 
+					if SpawnGroup.Engaged == false then 
+						SpawnGroup.Engaged = true
+						local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
+						SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
+					end
+				end
+				if ( ( Count == 0 ) and ( SpawnGroup.Engaged == true ) ) then
+					SpawnGroup.Engaged = false
+					SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex + 1], false, 15, "On Road" )
+				end
 		end
 	)
 Warzone.North.red.OffGroup:SpawnScheduled( 2400 , 0 )
