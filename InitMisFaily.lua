@@ -635,8 +635,8 @@ Warzone.North.red.OffGroup:OnSpawnGroup(
 					SpawnGroup.Engaged = false
 					SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex + 1], false, 15, "On Road" )
 				end
+			end
 		end
 	)
 Warzone.North.red.OffGroup:SpawnScheduled( 2400 , 0 )
 
-Warzone.North.ZoneCaptureCoalition[2].zcc:__Attack( 35 )
