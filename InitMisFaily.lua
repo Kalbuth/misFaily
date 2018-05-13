@@ -645,9 +645,23 @@ Warzone.North.blue.OffGroup:OnSpawnGroup(
 						SpawnGroup.LastTransmission = -1
 						Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
 						local DetectionReport = GenerateReport(self.DetectedItems, SpawnGroup.Callsign , SpawnGroup.Frequency / 1000000)
+						local Speech = {
+							[1] = "this_is",
+							[2] = SpawnGroup.RadioName,
+							[3] = SpawnGroup.Id,
+						}
+						for Id, Item in pairs(self.DetectedItems) do
+							Speech[#Speech + 1] = "pause"
+							Speech[#Speech + 1] = "armored_targets"
+							Speech[#Speech + 1] = "at"
+							Count = Count + 1
+							local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
+							Speech = CoordToSpeech(Speech, Coord)
+						end
 --						SpawnGroup.Radio:SetSubtitle( DetectionReport, 60 )
-						SpawnGroup.Radio:NewUnitTransmission("beaconsilent.ogg", DetectionReport, 30, SpawnGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
 --						SpawnGroup.Radio:Broadcast()
+--						SpawnGroup.Radio:NewUnitTransmission("beaconsilent.ogg", DetectionReport, 30, SpawnGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
+						RadioSpeech(SpawnGroup, Speech)
 					end
 					SpawnGroup.LastTransmission = SpawnGroup.LastTransmission + 1
 				end
@@ -796,6 +810,8 @@ Warzone.Center.blue.OffGroup:OnSpawnGroup(
 			SpawnGroup:SetCommand( Command )
 			local Callsign = math.random(19)
 			local Id = math.random(5)
+			SpawnGroup.Id = tostring(Id)
+			SpawnGroup.RadioName = CallSigns[Callsign]
 			SpawnGroup.Callsign = CallSigns[Callsign] .. " " .. Id
 			Command = { 
 							id = 'SetCallsign', 
@@ -841,9 +857,23 @@ Warzone.Center.blue.OffGroup:OnSpawnGroup(
 						SpawnGroup.LastTransmission = -1
 						Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
 						local DetectionReport = GenerateReport(self.DetectedItems, SpawnGroup.Callsign , SpawnGroup.Frequency / 1000000)
+						local Speech = {
+							[1] = "this_is",
+							[2] = SpawnGroup.RadioName,
+							[3] = SpawnGroup.Id,
+						}
+						for Id, Item in pairs(self.DetectedItems) do
+							Speech[#Speech + 1] = "pause"
+							Speech[#Speech + 1] = "armored_targets"
+							Speech[#Speech + 1] = "at"
+							Count = Count + 1
+							local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
+							Speech = CoordToSpeech(Speech, Coord)
+						end
 --						SpawnGroup.Radio:SetSubtitle( DetectionReport, 60 )
 --						SpawnGroup.Radio:Broadcast()
-						SpawnGroup.Radio:NewUnitTransmission("beaconsilent.ogg", DetectionReport, 30, SpawnGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
+--						SpawnGroup.Radio:NewUnitTransmission("beaconsilent.ogg", DetectionReport, 30, SpawnGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
+						RadioSpeech(SpawnGroup, Speech)
 					end
 					SpawnGroup.LastTransmission = SpawnGroup.LastTransmission + 1
 				end
@@ -891,3 +921,72 @@ Warzone.Center.red.OffGroup:SpawnScheduled( 2400 , 0.4 )
 MenuAskCenter = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Center Zone radio check", MenuWarzone, RadioCheck, "Center" )
 MenuAskCenter = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Center Zone Report", MenuWarzone, AskReport, "Center" )
 
+
+
+function CoordToSpeech(Speech, Coord)
+	local Coords = Coord:ToStringLLDDM()
+	tmpSub = string.gsub(Coords , "LL DDM", "")
+	splitSub = csplit(tmpSub, "'")
+	myLat = string.gsub(splitSub[1], ", ", "")
+	for c in myLat:gmatch"." do 
+		if c == " " then c = "North" end
+		if c == "." then c = "Point" end
+		Speech[#Speech + 1] = c
+	end
+	Speech[#Speech + 1] = "pause"
+	myLon = string.gsub(splitSub[2], "N   ", "")
+	for c in myLon:gmatch"." do 
+		if c == " " then c = "East" end
+		if c == "." then c = "Point" end
+		Speech[#Speech + 1] = c
+	end
+	return Speech
+end
+
+
+BASE:E("Pushing params for SPEECH : " .. routines.utils.oneLineSerialize(SpeechTest))
+function RadioSpeech(RadioGroup, SpeechTest)
+	local Delay = 2
+	BASE:E( "TestRadio launched, initial delay is : " .. Delay)
+	for Id, Sp in pairs(SpeechTest) do
+		local SpeechData = SPEECH[Sp]
+		SCHEDULER:New( nil, 
+			function()
+				RadioGroup.Radio:NewUnitTransmission(SpeechData.FileName, "", SpeechData.Duration, RadioGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()				
+			end, {}, Delay
+		)	
+		Delay = Delay + SpeechData.Duration
+		SCHEDULER:New( nil, 
+			function()
+				RadioGroup:SetCommand({
+					id = "StopTransmission",
+					params = {}
+				})
+			end, {}, Delay
+		)	
+		Delay = Delay + 0.2
+		BASE:E( "Next speech delay is : " .. Delay)
+	end
+end
+
+do
+-- validate functions with a dummy unit broadcasting shit every 60s on 136MHz
+	local RadioGroup = GROUP:FindByName("TEST_RADIO")
+	RadioGroup.Radio = RadioGroup:GetRadio()
+	RadioGroup.Frequency = 136000000
+
+	local SpeechTest = {
+		[1] = "this_is",
+		[2] = "Axeman",
+		[3] = "3",
+		[4] = "pause",
+		[5] = "armored_targets",
+		[6] = "at",
+	}
+	local SpeechTest = CoordToSpeech(SpeechTest, COORDINATE:NewFromVec2(RadioGroup:GetVec2()))
+	SCHEDULER:New( nil, 
+		function()
+			RadioSpeech(RadioGroup, SpeechTest)
+		end, {}, 5, 60
+	)	
+end

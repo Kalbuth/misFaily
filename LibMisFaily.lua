@@ -185,3 +185,152 @@ do
    return ret
   end
 end
+
+do
+	SPEECH = {
+		["0"] = {
+			FileName = "0-continue.wav",
+			Duration = 0.5
+		},
+		["1"] = {
+			FileName = "1-continue.wav",
+			Duration = 0.4
+		},
+		["2"] = {
+			FileName = "2-continue.wav",
+			Duration = 0.4
+		},
+		["3"] = {
+			FileName = "3-continue.wav",
+			Duration = 0.4
+		},
+		["4"] = {
+			FileName = "4-continue.wav",
+			Duration = 0.4
+		},
+		["5"] = {
+			FileName = "5-continue.wav",
+			Duration = 0.4
+		},
+		["6"] = {
+			FileName = "6-continue.wav",
+			Duration = 0.45
+		},
+		["7"] = {
+			FileName = "7-continue.wav",
+			Duration = 0.4
+		},
+		["8"] = {
+			FileName = "8-continue.wav",
+			Duration = 0.4
+		},
+		["9"] = {
+			FileName = "9-continue.wav",
+			Duration = 0.4
+		},
+		["this_is"] = {
+			FileName = "this is.wav",
+			Duration = 0.4
+		},
+		["Axeman"] = {
+			FileName = "Axeman.wav",
+			Duration = 0.7
+		},
+		["Darknight"] = {
+			FileName = "Darknight.wav",
+			Duration = 0.7
+		},
+		["Warrior"] = {
+			FileName = "Warrior.wav",
+			Duration = 0.7
+		},
+		["Pointer"] = {
+			FileName = "Pointer.wav",
+			Duration = 0.7
+		},
+		["Eyeball"] = {
+			FileName = "Eyeball.wav",
+			Duration = 0.7
+		},
+		["Moonbeam"] = {
+			FileName = "Moonbeam.wav",
+			Duration = 0.7
+		},
+		["Whiplash"] = {
+			FileName = "Whiplash.wav",
+			Duration = 0.7
+		},
+		["Finger"] = {
+			FileName = "Finger.wav",
+			Duration = 0.7
+		},
+		["Pinpoint"] = {
+			FileName = "Pinpoint.wav",
+			Duration = 0.7
+		},
+		["Ferret"] = {
+			FileName = "Ferret.wav",
+			Duration = 0.7
+		},
+		["Shaba"] = {
+			FileName = "Shaba.wav",
+			Duration = 0.7
+		},
+		["Playboy"] = {
+			FileName = "Playboy.wav",
+			Duration = 0.7
+		},
+		["Hammer"] = {
+			FileName = "Hammer.wav",
+			Duration = 0.7
+		},
+		["Jaguar"] = {
+			FileName = "Jaguar.wav",
+			Duration = 0.7
+		},
+		["Deathstar"] = {
+			FileName = "Deathstar.wav",
+			Duration = 0.7
+		},
+		["Anvil"] = {
+			FileName = "Anvil.wav",
+			Duration = 0.7
+		},
+		["Firefly"] = {
+			FileName = "Firefly.wav",
+			Duration = 0.7
+		},
+		["Mantis"] = {
+			FileName = "Mantis.wav",
+			Duration = 0.7
+		},
+		["Badger"] = {
+			FileName = "Badger.wav",
+			Duration = 0.7
+		},
+		["North"] = {
+			FileName = "N.wav",
+			Duration = 0.5
+		},
+		["East"] = {
+			FileName = "E.wav",
+			Duration = 0.45
+		},
+		["Point"] = {
+			FileName = "point-continue.wav",
+			Duration = 0.5
+		},
+		["at"] = {
+			FileName = "at.wav",
+			Duration = 0.3
+		},
+		["armored_targets"] = {
+			FileName = "armored vehicles.wav",
+			Duration = 1
+		},
+		["pause"] = {
+			FileName = "beaconsilent.ogg",
+			Duration = 2
+		},
+	}
+end
