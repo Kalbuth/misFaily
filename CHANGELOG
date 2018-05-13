@@ -1,3 +1,18 @@
+--------------------------
+mission v83 up sur le serv
+--------------------------
+
+* Toutes les unités au sol, y compris defensives, ont une frequence radio et reportent leurs contacts
+* Code generique. Rajouter / modifier des fronts est simple
+
+------------------------------------------
+Mission v82-experimental up sur le serveur
+------------------------------------------
+
+* Ajout TACAN (8Y) sur KC130(modifié)
+* Les groupes au sol en contact avec l'adversaire broadcast maintenant les coordonnées des contacts en audio!
+* Une unité de test broadcast des coordonnées fictives toutes les minutes sur le canal 136MHz
+
 ------------------------------------------------------------------
 mission v81 up & running - nouveau front et tentative de fix radio
 ------------------------------------------------------------------
