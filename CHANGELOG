@@ -1,0 +1,56 @@
+------------------------------------------------------------------
+mission v81 up & running - nouveau front et tentative de fix radio
+------------------------------------------------------------------
+
+* arrêt des pannes aléatoires
+* tentative de re passage en mode map sans icône. La vue F2 est limitée à l'appareil du joueur
+* ouverture de de la zone Centre au sol
+* rapprochement de la FARP Est de la zone de front
+* la Farp montagne au sud n'existe plus
+* refonte du système radio
+Chaque zone de front possède son control center , avec sa fréquence fixe (131 pour le contrôle nord, 137 pour le contrôle centre)
+les joueurs ont un menu Ground Opererations permettant de demander a chaque control center un check radio et le listing des unités sur la zone
+Le contrôle center répondra sur son canal
+Le listing des troupes inclue le nom et la fréquence dédié à chaque groupe au sol
+Chaque groupe au sol en contact avec l'ennemi broadcast toutes les deux minutes le type et les coordonnées du ou des groupes adverses en contact, sur sa fréquence dédiée. Il faut donc passer sur cette fréquence pour entendre ces messages
+ bugs connus : certains helico n'ont pas accès au menu CTLD. Il est par exemple préférable d'utiliser les huey pour le transport sur la farp centre
+
+Les messages radio ne sont toujours pas affichés plus de quelques secondes malheureusement. Le bug n'apparaît qu'en multi, ça fonctionne chez moi en solo lors de l'édition de la mission mais bug une fois sur le serveur. Je vais continuer mon enquête pour voir si c'est un bug connu et trouver une solution
+Je suis preneur de retours
+1) est ce que la vue sans icône et limitée au joueur n'est pas trop contraignante
+2) est ce que le système de radio est utilisable (nonobstant le foutu bug), comment améliorer
+
+------------------------------------------
+Mission v79 Experimental up sur le serveur
+------------------------------------------
+
+* reequilibrage des forces : moins de chars et de moindre qualité dans les groupes russes
+* les troupes entrant en contact stoppent jusqu'à elimination de l'adversaire
+* Les troupes entrant en contact avec un groupe adverse font un rapport au Command Center du secteur qui broadcast les informations de contact toutes les 5 minutes(modifié)
+* Le Command Center d'un secteur broadcast sur une frequence particuliere
+
+------------------------------------------
+Mission v77 Experimental up sur le serveur
+------------------------------------------
+
+* Ajout slots Ka 50 + Gazelle Minigun + 1 Gazelle L sur FARP Nord
+* Remplacement Gazelles M FARP Nord par Gazelles L et Mistral
+* Refonte complete de la guerre au sol
+* Activation de la zone de combat Nord seulement, desactivation des zone centre et sud pour evaluation du nouveau systeme
+* 4 zones de combat à prendre les unes apres les autres, avec reaction ennemire (envoi de soutien + attaque de nos positions)
+* Marquage des zones et de leur etat sur la map
+
+
+-----------------------------
+Mission v70 up sur le serveur
+-----------------------------
+
+* groupes terrestres en région centrale :(modifié)
+1/ spawn timer augmenté à 30mn
+2/ taille de groupe réduite (6 unités)
+* Ajout de Ka50, Mi8 (version armée et transport) et Huey (version armée et transport) sur la FARP Nord
+* Ajout de slots Spitfire, P51, Bf109 et FW190 sur (ou a proximité) de la base principale pour permettre le vol libre avec tout le monde
+ah, et j'ai oublié
+* C'est l'hiver!!
+temps relativement beau, moins de vent qu'auparavant
+
