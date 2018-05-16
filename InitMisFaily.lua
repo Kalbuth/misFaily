@@ -122,6 +122,11 @@ Sukh_CAP_Spawn = SPAWN
 	:InitLimit(4, 2)
 	:OnSpawnGroup( 
 		function (SpawnGroup)
+			local DCSControllable = SpawnGroup:GetDCSObject()
+			if DCSControllable then 
+				local Controller = DCSControllable:getController()
+				Controller:setOption( AI.Option.Air.id.PROHIBIT_AG , true )
+			end
 			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( Sukh_CAP_Zone, 5000, 8000, 500, 800 )
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
@@ -419,6 +424,18 @@ CallSigns = {
 	[19]= "Badger",
 }
 
+-- ConfigVars = {}
+-- ConfigVars.UnpackedUnits = {}
+-- ConfigVars.Zones = {}
+ConfigVars = {}
+do
+	local FailyLfs = require('lfs')
+	ConfigVars = persistence.load( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' )
+end
+BASE:E("Config Variable : " .. routines.utils.oneLineSerialize(ConfigVars))
+BASE:E(routines.utils.oneLineSerialize(ConfigVars.Zones))
+
+
 function ListReports(GroupSet)
 	local Report = "We have on ground on zone :\n"
 	for groupName, groupData in pairs(GroupSet.Set) do
@@ -573,6 +590,7 @@ Constants.Center.GroundFreq = 137
 Constants.Center.RadioOffset = 200
 Constants.Center.RedIndex = 3
 
+
 for Zone, Values in pairs(Constants) do
 	Warzone[Zone] = {}
 	Warzone[Zone].red = {}
@@ -591,7 +609,7 @@ for Zone, Values in pairs(Constants) do
 	Warzone[Zone].red.OffGroup = SPAWN:New("GROUP_DYN_R_" .. Zone):InitRandomizeTemplate(Warzone.red.Templates):InitLimit(12, 0)
 	Warzone[Zone].blue.OffGroup = SPAWN:New("GROUP_DYN_B_" .. Zone):InitRandomizeTemplate(Warzone.blue.Templates):InitLimit(12, 0)
 	Warzone[Zone].blue.OffSet = SET_GROUP:New()
-	Warzone[Zone].blue.DefSpawn = SPAWN:New(Warzone.blue.Templates[1]):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100):OnSpawnGroup( BlueSpawnFunc, Zone, false )
+	Warzone[Zone].blue.DefSpawn = SPAWN:NewWithAlias(Warzone.blue.Templates[1], "Template_" .. Zone .. "_DEF_"):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100):OnSpawnGroup( BlueSpawnFunc, Zone, false )
 	Warzone[Zone].red.SpawnZone = ZONE_GROUP:New(Zone .. "_Red_Spawn", GROUP:FindByName("GROUP_DYN_R_" .. Zone), 500)
 	Warzone[Zone].blue.SpawnZone = ZONE_GROUP:New(Zone .. "_Blue_Spawn", GROUP:FindByName("GROUP_DYN_B_" .. Zone), 500)
 	Warzone[Zone].red.CAS = SPAWN:New("Template_RU_Heli_CAS_" .. Zone):InitCleanUp( 60 )
@@ -599,6 +617,18 @@ for Zone, Values in pairs(Constants) do
 
 	Warzone[Zone].ZoneSet = SET_GROUP:New():FilterPrefixes( "ZONE_CAPTURE_" .. Zone ):FilterOnce()
 	Warzone[Zone].RedIndex = Values.RedIndex
+--	if setContains(ConfigVars, "Zones") then
+	if ConfigVars.Zones then
+--		if setContains(ConfigVars.Zones, Zone) then
+		if ConfigVars.Zones[Zone] then
+--			if setContains(ConfigVars.Zones[Zone], "RedIndex") then
+			if ConfigVars.Zones[Zone].RedIndex then
+				BASE:E("Using Config File Defined RedIndex "  .. ConfigVars.Zones[Zone].RedIndex .. " for Zone : " .. Zone)
+				Warzone[Zone].RedIndex = ConfigVars.Zones[Zone].RedIndex
+			end
+		end
+	end
+	ConfigVars.Zones[Zone].RedIndex = Values.RedIndex
 	Warzone[Zone].Zones = {}
 	Warzone[Zone].ZoneCaptureCoalition = {}
 
@@ -614,22 +644,11 @@ for Zone, Values in pairs(Constants) do
 		Warzone[Zone].ZoneCaptureCoalition[id] = {}
 		if id <= Warzone[Zone].RedIndex then
 			Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.RED )
+			Warzone.red.DefSpawn:SpawnInZone( Warzone[Zone].ZoneCaptureCoalition[id].zcc.Zone, true )
 			else
+			BASE:E("Check for Warzone id : " .. id .. " in Zone " .. Zone)
 			Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.BLUE )
-		end
-		Warzone[Zone].ZoneCaptureCoalition[id].zcc.OnEnterEmpty = function ( self, From, Event, To )
-			if From == "Guarded" then
-				local tutu = ""
-			else
-				local Coalition = self:GetCoalition()
-				local ZoneName = self:GetZoneName()
-				if Coalition == coalition.side.RED then
-					Warzone.red.DefSpawn:SpawnInZone( self.Zone, true )
-				end
-				if Coalition == coalition.side.BLUE then
-					Warzone[Zone].blue.DefSpawn:SpawnInZone( self.Zone, true )
-				end
-			end
+			Warzone[Zone].blue.DefSpawn:SpawnInZone( Warzone[Zone].ZoneCaptureCoalition[id].zcc.Zone, true )
 		end
 		Warzone[Zone].ZoneCaptureCoalition[id].zcc:Mark()
 		Warzone[Zone].ZoneCaptureCoalition[id].zcc:Start( 5, 60 )
@@ -638,11 +657,13 @@ for Zone, Values in pairs(Constants) do
 			local Coalition = self:GetCoalition()
 			if Coalition == coalition.side.RED then
 				Warzone[Zone].RedIndex = Warzone[Zone].RedIndex + 1
+				ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
 				local reinforcement = Warzone[Zone].red.OffGroup:Spawn()
 				reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex], false, 15, "On Road" )
 			end
 			if Coalition == coalition.side.BLUE then
 				Warzone[Zone].RedIndex = Warzone[Zone].RedIndex - 1
+				ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
 				local reinforcement = Warzone[Zone].blue.OffGroup:Spawn()
 				reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex + 1], false, 15, "On Road" )
 			end
@@ -772,3 +793,12 @@ do
 		end, {}, 5, 60
 	)	
 end
+
+function SaveConfig()
+	local FailyLfs = require('lfs')
+	persistence.store( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' , ConfigVars)
+end
+
+AdminGroup = GROUP:FindByName("ADMIN")
+AdminMenu = MENU_GROUP:New(AdminGroup, "Admin")
+MENU_GROUP_COMMAND:New(AdminGroup, "Save Config", AdminMenu, SaveConfig)
