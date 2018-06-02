@@ -1,11 +1,17 @@
-return {
+-- Persistent Data
+local multiRefObjects = {
+
+} -- multiRefObjects
+local obj1 = {
 	["Zones"] = {
-		["North"] = {
-			["RedIndex"] = 2;
-		};
 		["Center"] = {
 			["RedIndex"] = 3;
 		};
+		["North"] = {
+			["RedIndex"] = 2;
+		};
 	};
-	["UnpackedUnits"] = {};
+	["UnpackedUnits"] = {
+	};
 }
+return obj1

@@ -1,10 +1,4 @@
-Zone_SA19_1 = ZONE:New( "SA19-1 Zone" )
-Zone_SA19_2 = ZONE:New( "SA19-2 Zone" )
-Zone_SA10 = ZONE:New( "SA10_Zone" )
-Zone_EWR = ZONE:New( "EWR Zone" )
-Zone_BUK = ZONE:New( "SA11 Zone" )
-Zone_KUB = ZONE:New( "SA6 Zone" )
-Zone_Template = ZONE:New( "Template Zone" )
+
 Zones_WWII = {}
 Zones_WWII[1] = ZONE:New( "ZONE_WWII_MAYSKIY" )
 
@@ -67,38 +61,17 @@ SetAllBlue = SET_GROUP:New():FilterCoalitions( "blue" )
 
 
 
-Spawn_M29_1 = SPAWN:New("AI Agressor 1")
-Spawn_M29_2 = SPAWN:New("AI Agressor 2")
-Spawn_M23_1 = SPAWN:New("AI Agressor 3")
-Spawn_M23_2 = SPAWN:New("AI Agressor 4")
-Spawn_Tanker_M2K = SPAWN:New( "Template Tanker M2K" ):InitLimit(1,0)
-Spawn_Tanker_Other = SPAWN:New( "Template KC 135" ):InitLimit(1,0)
-Spawn_Ground_1 = SPAWN:New("RUS_ARMOR_L_1")
-Spawn_Ground_2 = SPAWN:New("RUS_ARMOR_L_2")
-Spawn_SAM_1 = SPAWN:New("SAM SA19-1"):InitLimit(7, 0)
-Spawn_SAM_2 = SPAWN:New("SAM SA19-2"):InitLimit(7, 0)
-Spawn_SAM_3 = SPAWN:New("SAM SA10-1"):InitLimit(12, 0)
-Spawn_SAM_4 = SPAWN:New("SAM BUK"):InitLimit(9, 0)
-Spawn_SAM_5 = SPAWN:New("SAM KUB"):InitLimit(8, 0)
-Spawn_Inf_RUS_1 = SPAWN:New("infantry FARP 1")
-Spawn_EWR_1 = SPAWN:New("Template EWR1"):InitLimit(3, 0)
-Spawn_P51 = SPAWN:New("Template P51D")
-Spawn_Bf109 = SPAWN:New("Template Bf109")
-Spawn_FW190 = SPAWN:New("Template FW190")
-Spawn_Mig15 = SPAWN:New("Template Mig15")
-Spawn_F86 = SPAWN:New("Template F86")
-Spawn_Blue_P51 = SPAWN:New("Template blue P51")
+
+Spawn_Tanker_M2K = SPAWN:New( "Template Tanker M2K" ):InitLimit(1,0):InitCleanUp ( 120 )
+Spawn_Tanker_Other = SPAWN:New( "Template KC 135" ):InitLimit(1,0):InitCleanUp ( 120 )
+Spawn_Tanker_Navy = SPAWN:New( "Template Tanker Navy" ):InitLimit(1,0):InitCleanUp ( 120 )
+
+-- Spawn_Blue_P51 = SPAWN:New("Template blue P51")
 -- Spawn_Blue_bf109 = SPAWN:New("Template blue Bf109")
-Spawn_Blue_fw190 = SPAWN:New("Template blue FW190")
-Spawn_Kuta_SAM = SPAWN:New("Template Kutaisi SAM")
-Spawn_Kuta_1 = SPAWN:New("Template Kutaisi 1")
-Spawn_Kuta_2 = SPAWN:New("Template Kutaisi 2")
-Spawn_Kuta_3 = SPAWN:New("Template Kutaisi 3")
-Spawn_Kuta_4 = SPAWN:New("Template Kutaisi 4")
-Spawn_Kuta_5 = SPAWN:New("Template Kutaisi 5")
+-- Spawn_Blue_fw190 = SPAWN:New("Template blue FW190")
+
 Spawn_Sukh_Mi8 = SPAWN:New("Template Sukh Mi8")
 Spawn_Sukh_Ka50 = SPAWN:New("Template Sukh Ka50")
-Spawn_Gud_Su25T = SPAWN:New("Template Gud Su25T")
 Spawn_Mayk_Mig21 = SPAWN:New("template red mig21 maykop")
 Spawn_Dog_Mig21 = SPAWN:New("Template Dogfight Mig21")
 Spawn_Dog_Mig29A = SPAWN:New("Template Dogfight Mig29A")
@@ -107,7 +80,6 @@ Spawn_Dog_Su27 = SPAWN:New("Template Dogfight Su27")
 Spawn_Dog_Mirage = SPAWN:New("Template Dogfight Mirage")
 
 
-Zone_Achig = ZONE:New("Achigvara")
 
 Sukh_CAP_Zone = ZONE:New('Sukh_Patrol')
 
@@ -252,20 +224,9 @@ SetMirageClients = SET_CLIENT:New():FilterPrefixes("Pilot M2000C"):FilterStart()
 
 Tanker_M2K = Spawn_Tanker_M2K:Spawn()
 Tanker_Other = Spawn_Tanker_Other:Spawn()
+Tanker_Navy = Spawn_Tanker_Navy:Spawn()
 
 
-function ActivateSochCAP( event )
-	if event.id == world.event.S_EVENT_SHOT and mist.utils.get2DDist(event.initiator:getPosition().p, trigger.misc.getZone("Fight_Zone").point) < 100000 then
-		if event.initiator:getCoalition() == coalition.side.BLUE then
-			for CAPGroupId, CAPGroupData in pairs ( SetSochCAP:GetSet() ) do
-				local CAPGroup = CAPGroupData
-				CAPGroupData:OptionROEWeaponFree()
-			end
-		end
-	end
-
-end
-mist.addEventHandler(ActivateSochCAP)
 
 local function SpawnNewGroup( Template )
    Spawn_Plane = Template:Spawn()
@@ -282,18 +243,6 @@ end
 
 
 
-local function CleanSAM()
-	SetSAMGroup:ForEachGroupNotInZone( Zone_Template,
-  --- @param Group#GROUP MooseGroup
-		function( MooseGroup )
-			DCSGroup = MooseGroup:GetDCSObject()
-			if DCSGroup:isExist() then
-				MESSAGE:New(MooseGroup.GroupName, 5):ToBlue()
-				MooseGroup:Destroy()
-			end
-		end
-	)
-end
 
 
 
@@ -301,11 +250,7 @@ Spawn_Red_CSAR = SPAWN:New ("Template_RED_CSAR")
 ZONE_Red_CSAR_1 = ZONE:New("Fight_Zone")
 CSAR_1 = CSAR_HANDLER:New( ZONE_Red_CSAR_1, { Spawn_Red_CSAR, } )
 MenuCoalitionBlue = MENU_COALITION:New( coalition.side.BLUE, "Coalition")
-MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane", MenuCoalitionBlue )
-MenuSpawnPlaneM29_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_1 )
-MenuSpawnPlaneM29_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_2 )
-MenuSpawnPlaneM23_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig23", MenuSpawnPlane, SpawnNewGroup, Spawn_M23_1 )
-MenuSpawnPlaneM23_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig23", MenuSpawnPlane, SpawnNewGroup, Spawn_M23_2 )
+
 MenuSpawnPlaneM21_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig21 Maykop", MenuSpawnPlane, SpawnNewGroup, Spawn_Mayk_Mig21 )
 MenuSpawnPlaneOther = MENU_COALITION:New( coalition.side.BLUE, "Other", MenuSpawnPlane)
 MenuSpawnPlaneP51 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 P51D", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_P51 )
@@ -318,7 +263,6 @@ MenuSpawnKorea = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Korean Furbal
 -- MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Bf 109 Practice target", MenuSpawnPlaneOther, SpawnPractice109 )
 MenuSpawnPlaneMi8 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Mi8", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Mi8 )
 MenuSpawnPlaneKa50 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Ka50", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Ka50 )
-MenuSpawnPlaneSu25T = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Su25T", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Gud_Su25T )
 MenuSpawnPlaneControl = MENU_COALITION:New( coalition.side.BLUE, "Controle des spawns", MenuSpawnPlane)
 MenuSpawnPlaneStopSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Stopper le spawn auto a Sochi", MenuSpawnPlaneControl, StartSetSpawning, Sukh_CAP_Spawn )
 MenuSpawnPlaneStartSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Demarrer le spawn auto a Sochi", MenuSpawnPlaneControl,  StopSetSpawning, Sukh_CAP_Spawn )
@@ -347,6 +291,8 @@ MenuSpawnGroundClearRnd = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detr
 MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker", MenuCoalitionBlue )
 MenuSpawnPlaneTankerM2K = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker M2K", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_M2K )
 MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker KC135", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Other )
+MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker PA", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Navy )
+
 
 MenuSpawnDogfight = MENU_COALITION:New( coalition.side.BLUE, "Dogfight")
 MenuSpawnDogM21 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mig21", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mig21 )
@@ -356,8 +302,7 @@ MenuSpawnDogSu27 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Su27"
 MenuSpawnDogMirage = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mirage", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mirage )
 
 
-MenuSpawnRUS = MENU_COALITION:New( coalition.side.RED, "Spawn Assets" )
-MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.RED, "Spawn GCI", MenuSpawnRUS, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
+
 
 -- WWII Target Practice Menu
 SetBlueWWIIPlanes = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue"):FilterStart()
@@ -583,12 +528,20 @@ Warzone.red.DefSpawn = SPAWN:New(Warzone.red.Templates[1]):InitRandomizeTemplate
 Constants = {}
 Constants.North = {}
 Constants.Center = {}
+Constants.NovoNorth = {}
+Constants.NovoCoast = {}
 Constants.North.GroundFreq = 131
 Constants.North.RadioOffset = 0
 Constants.North.RedIndex = 2
 Constants.Center.GroundFreq = 137
 Constants.Center.RadioOffset = 200
 Constants.Center.RedIndex = 3
+Constants.NovoNorth.GroundFreq = 132
+Constants.NovoNorth.RadioOffset = 400
+Constants.NovoNorth.RedIndex = 1
+Constants.NovoCoast.GroundFreq = 133
+Constants.NovoCoast.RadioOffset = 600
+Constants.NovoCoast.RedIndex = 2
 
 
 for Zone, Values in pairs(Constants) do
@@ -628,7 +581,7 @@ for Zone, Values in pairs(Constants) do
 			end
 		end
 	end
-	ConfigVars.Zones[Zone].RedIndex = Values.RedIndex
+	-- ConfigVars.Zones[Zone].RedIndex = Values.RedIndex
 	Warzone[Zone].Zones = {}
 	Warzone[Zone].ZoneCaptureCoalition = {}
 
