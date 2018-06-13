@@ -269,48 +269,33 @@ do
 		return self:GetStateString() .. " - " .. self:GetTaskName() .. " ( " .. self.TargetSetUnit:GetUnitTypesText() .. " )"
 	end
 	
-	TASK_A2G_NOFAC = {
-    ClassName = "TASK_A2G_NOFAC",
+	GROUND_ZONE_CC = {
+    ClassName = "GROUND_ZONE_CC",
   }
 	
-	function TASK_A2G_NOFAC:New( Mission, SetGroup, TaskName, TaskType, TargetSetUnit, TargetZone )
-    local self = BASE:Inherit( self, TASK:New( Mission, SetGroup, TaskName, TaskType ) )
+	function GROUND_ZONE_CC:New( Radio )
+    local self = BASE:Inherit( self, FSM:New( ) )
     self:F()
   
-    self.TargetSetUnit = TargetSetUnit
-    self.TargetZone = TargetZone
-    
-    local A2GUnitProcess = self:GetUnitProcess()
+		self.CasList = {}
+   
 
-    A2GUnitProcess:AddProcess   ( "Planned",    "Accept",   ACT_ASSIGN_ACCEPT:New( "Attack the Area" ), { Assigned = "Route", Rejected = "Eject" } )
-    A2GUnitProcess:AddProcess   ( "Assigned",   "Route",    ACT_ROUTE_ZONE:New( self.TargetZone ), { Arrived = "Update" } )
-    A2GUnitProcess:AddTransition( "Rejected",   "Eject",    "Planned" )
-    A2GUnitProcess:AddTransition( "Arrived",    "Update",   "Updated" ) 
-    A2GUnitProcess:AddProcess   ( "Updated",    "Account",  ACT_ACCOUNT_DEADS:New( self.TargetSetUnit, "Attack" ), { Accounted = "Success" } )
+    self:AddTransition( "Waiting",   "ContactReport",    "LookingForCAS" )
+    self:AddTransition( "Waiting",    "Update",   "Waiting" ) 
     --Fsm:AddProcess ( "Updated",    "JTAC",     PROCESS_JTAC:New( self, TaskUnit, self.TargetSetUnit, self.FACUnit  ) )
-    A2GUnitProcess:AddTransition( "Accounted",  "Success",  "Success" )
-    A2GUnitProcess:AddTransition( "Failed",     "Fail",     "Failed" )
+    --self:AddTransition( "Accounted",  "Success",  "Success" )
+    --self:AddTransition( "Failed",     "Fail",     "Failed" )
     
-    function A2GUnitProcess:onenterUpdated( TaskUnit )
-      self:E( { self } )
-      self:Account()
-      self:Smoke()
-    end
-
-    
-    
-    --_EVENTDISPATCHER:OnPlayerLeaveUnit( self._EventPlayerLeaveUnit, self )
-    --_EVENTDISPATCHER:OnDead( self._EventDead, self )
-    --_EVENTDISPATCHER:OnCrash( self._EventDead, self )
-    --_EVENTDISPATCHER:OnPilotDead( self._EventDead, self )
-
     return self
   end
   
-    --- @param #TASK_A2G self
-  function TASK_A2G_NOFAC:GetPlannedMenuText()
-    return self:GetStateString() .. " - " .. self:GetTaskName() .. " ( " .. self.TargetSetUnit:GetUnitTypesText() .. " )"
-  end
+	function GROUND_ZONE_CC:AddCAS( CASGroup )
+		self.CasList[#self.CasList] = CASGroup
+	end
+	
+	function GROUND_ZONE_CC:onenterLookingForCAS()
+		
+	end
   
   CSAR_HANDLER = {
     ClassName = "CSAR_HANDLER",
