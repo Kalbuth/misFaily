@@ -294,7 +294,16 @@ do
 	end
 	
 	function GROUND_ZONE_CC:onenterLookingForCAS()
-		
+		for Id, Data in pairs(self.CasList) do
+			local CasGroup = Data.AIControllable
+			if CasGroup:IsAlive() then
+				if CasGroup:Is( "Patrolling" ) then
+				-- do Engage this CAS to target zone stuff
+				end
+			else
+				self.CasList[Id] = nil
+			end
+		end
 	end
   
   CSAR_HANDLER = {
