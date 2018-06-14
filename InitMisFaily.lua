@@ -515,6 +515,16 @@ Warzone.blue = {}
 
 Warzone.red.Templates = {}
 Warzone.blue.Templates = {}
+Warzone.red.CAS = {}
+Warzone.red.CAS.CASGroups = {}
+Warzone.red.CAS.AI_CAS = AI_CAS_ZONE:New( ZONE:New("RED_CAS_PATROL_1"), 100, 300, 80, 120, ZONE:New("RED_CAS_PATROL_1") )
+Warzone.red.CAS.CASSpawn = SPAWN:New("Template_RU_Heli_CAS_Center"):InitLimit(2, 0):OnSpawnGroup(
+			function (SpawnGroup)
+				Warzone.red.CAS.CASGroups[#Warzone.red.CAS.CASGroups + 1] = SpawnGroup
+				Warzone.red.CAS.AI_CAS:SetControllable( SpawnGroup )
+				Warzone.red.CAS.AI_CAS:__Start(1)
+			end)
+			:SpawnScheduled(1200,0)
 for groupName, groupData in pairs( SetRedObj.Set ) do
   Warzone.red.Templates[#Warzone.red.Templates + 1] = groupName
 end

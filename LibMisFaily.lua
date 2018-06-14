@@ -293,11 +293,11 @@ do
 		self.CasList[#self.CasList] = CASGroup
 	end
 	
-	function GROUND_ZONE_CC:onenterLookingForCAS()
-		for Id, Data in pairs(self.CasList) do
-			local CasGroup = Data.AIControllable
+	function GROUND_ZONE_CC:onenterLookingForCAS( From, Event, To, Group)
+		for Id, Cas in pairs(self.CasList) do
+			local CasGroup = Cas.AIControllable
 			if CasGroup:IsAlive() then
-				if CasGroup:Is( "Patrolling" ) then
+				if Cas:Is( "Patrolling" ) then
 				-- do Engage this CAS to target zone stuff
 				end
 			else
