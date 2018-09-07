@@ -65,6 +65,7 @@ SetAllBlue = SET_GROUP:New():FilterCoalitions( "blue" )
 Spawn_Tanker_M2K = SPAWN:New( "Template Tanker M2K" ):InitLimit(1,0):InitCleanUp ( 120 )
 Spawn_Tanker_Other = SPAWN:New( "Template KC 135" ):InitLimit(1,0):InitCleanUp ( 120 )
 Spawn_Tanker_Navy = SPAWN:New( "Template Tanker Navy" ):InitLimit(1,0):InitCleanUp ( 120 )
+Spawn_AWACS = SPAWN:New( "Template Blue AWACS" ):InitLimit(1,0):InitCleanUp ( 120 ):SpawnScheduled(900,0)
 
 -- Spawn_Blue_P51 = SPAWN:New("Template blue P51")
 -- Spawn_Blue_bf109 = SPAWN:New("Template blue Bf109")
@@ -250,7 +251,7 @@ Spawn_Red_CSAR = SPAWN:New ("Template_RED_CSAR")
 ZONE_Red_CSAR_1 = ZONE:New("Fight_Zone")
 CSAR_1 = CSAR_HANDLER:New( ZONE_Red_CSAR_1, { Spawn_Red_CSAR, } )
 MenuCoalitionBlue = MENU_COALITION:New( coalition.side.BLUE, "Coalition")
-
+MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane", MenuCoalitionBlue )
 MenuSpawnPlaneM21_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig21 Maykop", MenuSpawnPlane, SpawnNewGroup, Spawn_Mayk_Mig21 )
 MenuSpawnPlaneOther = MENU_COALITION:New( coalition.side.BLUE, "Other", MenuSpawnPlane)
 MenuSpawnPlaneP51 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 P51D", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_P51 )
@@ -444,46 +445,64 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 	SpawnGroup.Detection:InitDetectOptical( true )
 	SpawnGroup.Detection.LocalGroup = SpawnGroup.GroupName
 	SpawnGroup.Detection:Start()
+	local tmpCoord = SpawnGroup:GetCoordinate()
+	SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : false" )
 	SpawnGroup.Detection.OnAfterDetect = function (self, From, Event, To)
 		local Count = 0
 		local SpawnGroup = GROUP:FindByName(self.LocalGroup)
 		for Index, Value in pairs( self.DetectedObjects ) do
 			Count = Count + 1
 		end
+		ennemyAlive = false
 		if Count > 0 then 
-			if SpawnGroup.Engaged == false then 
-				SpawnGroup.Engaged = true
-				local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
-				SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
-				SpawnGroup:EnRouteTaskFAC( 5000, 5)
-			end
-			if SpawnGroup.LastTransmission > 4 then 
-				SpawnGroup.LastTransmission = -1
-				Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
-				local DetectionReport = GenerateReport(self.DetectedItems, SpawnGroup.Callsign , SpawnGroup.Frequency / 1000000)
-				local Speech = {
-					[1] = "this_is",
-					[2] = SpawnGroup.RadioName,
-					[3] = SpawnGroup.Id,
-				}
-				for Id, Item in pairs(self.DetectedItems) do
-					Speech[#Speech + 1] = "pause"
-					Speech[#Speech + 1] = "armored_targets"
-					Speech[#Speech + 1] = "at"
-					Count = Count + 1
-					local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
-					Speech = CoordToSpeech(Speech, Coord)
+			for Id, Item in pairs(self.DetectedItems) do
+				Item.Set:ForEachUnit( function ( UnitObject )
+					if UnitObject:IsAlive() then
+						ennemyAlive = true
+					end
 				end
---						SpawnGroup.Radio:SetSubtitle( DetectionReport, 60 )
---						SpawnGroup.Radio:Broadcast()
---						SpawnGroup.Radio:NewUnitTransmission("beaconsilent.ogg", DetectionReport, 30, SpawnGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
-				RadioSpeech(SpawnGroup, Speech)
+				)
+			end
+			if ennemyAlive then
+				if SpawnGroup.Engaged == false then 
+					SpawnGroup.Engaged = true
+					local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
+					SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
+					SpawnGroup:EnRouteTaskFAC( 5000, 5)
+				end
+				if SpawnGroup.LastTransmission > 4 then 
+					SpawnGroup.LastTransmission = -1
+					Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
+					local Speech = {
+						[1] = "this_is",
+						[2] = SpawnGroup.RadioName,
+						[3] = SpawnGroup.Id,
+					}
+					for Id, Item in pairs(self.DetectedItems) do
+						Speech[#Speech + 1] = "pause"
+						Speech[#Speech + 1] = "armored_targets"
+						Speech[#Speech + 1] = "at"
+						Count = Count + 1
+						local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
+						Speech = CoordToSpeech(Speech, Coord)
+					end
+					RadioSpeech(SpawnGroup, Speech)
+				end
 			end
 			SpawnGroup.LastTransmission = SpawnGroup.LastTransmission + 1
 		end
-		if ( ( Count == 0 ) and ( SpawnGroup.Engaged == true ) ) then
+		if ( ( not ennemyAlive ) and ( SpawnGroup.Engaged == true ) ) then
 			SpawnGroup.Engaged = false
 			SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
+		end
+		local tmpCoord = SpawnGroup:GetCoordinate()
+		if SpawnGroup.Mark then
+			tmpCoord:RemoveMark ( SpawnGroup.Mark )
+		end
+		if SpawnGroup.Engaged then
+			SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : true " )
+		else
+			SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : false " )
 		end
 	end
 end
