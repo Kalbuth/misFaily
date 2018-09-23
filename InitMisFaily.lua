@@ -60,12 +60,16 @@ SetAllBlue = SET_GROUP:New():FilterCoalitions( "blue" )
 
 
 
-
+FailyAWACS = false
 
 Spawn_Tanker_M2K = SPAWN:New( "Template Tanker M2K" ):InitLimit(1,0):InitCleanUp ( 120 )
 Spawn_Tanker_Other = SPAWN:New( "Template KC 135" ):InitLimit(1,0):InitCleanUp ( 120 )
 Spawn_Tanker_Navy = SPAWN:New( "Template Tanker Navy" ):InitLimit(1,0):InitCleanUp ( 120 )
-Spawn_AWACS = SPAWN:New( "Template Blue AWACS" ):InitLimit(1,0):InitCleanUp ( 120 ):SpawnScheduled(900,0)
+Spawn_AWACS = SPAWN:New( "Template Blue AWACS" ):InitLimit(1,0):InitCleanUp ( 120 ):OnSpawnGroup( 
+	function (SpawnGroup) 
+		FailyAWACS = SpawnGroup
+	end
+	):SpawnScheduled(900,0)
 
 -- Spawn_Blue_P51 = SPAWN:New("Template blue P51")
 -- Spawn_Blue_bf109 = SPAWN:New("Template blue Bf109")
@@ -237,6 +241,13 @@ local function ReSpawnGroup( Template )
    Spawn_Plane = Template:ReSpawn(1)
 end
 
+local function ReSpawnAWACS()
+	if FailyAWACS then
+		FailyAWACS:Destroy()
+	end
+  FailyAWACS = Spawn_AWACS:Spawn()
+end
+
 local function ReSpawnGroupInZone( Template, Zone )
 	Spawn_Group = Template:SpawnInZone(Zone, 1)
 end
@@ -289,10 +300,11 @@ MenuSpawnGroundClearRnd = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detr
 --MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn GCI RED", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
 --MenuCleanSAM = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Destroy all SAMs", MenuSpawnSAM, CleanSAM )
 
-MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker", MenuCoalitionBlue )
+MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker & AWACS", MenuCoalitionBlue )
 MenuSpawnPlaneTankerM2K = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker M2K", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_M2K )
 MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker KC135", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Other )
 MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker PA", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Navy )
+MenuSpawnPlaneAWACS = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "ReSpawn AWACS", MenuSpawnTanker, ReSpawnAWACS )
 
 
 MenuSpawnDogfight = MENU_COALITION:New( coalition.side.BLUE, "Dogfight")

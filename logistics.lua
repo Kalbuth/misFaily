@@ -111,7 +111,10 @@ function LOGISTICS:New( Parameters )
 		function(  )
 			self.SetTransportPlayers:ForEachGroupAlive(
 				function ( PlayerGroup )
-					self:AddTransportMenu( PlayerGroup )
+					local GroupName = PlayerGroup:GetName()
+					if not self.PlayerGroups[GroupName] then
+						self:AddTransportMenu( PlayerGroup )
+					end
 				end
 			)
 		end, {}, 10, 10
@@ -121,26 +124,19 @@ end
 function LOGISTICS:CheckCargos()
 	for infId, infData in pairs(self.TroopList) do
 		if not infData:IsAlive() then
+			self.TroopList[infId]:Destroy()
 			self.TroopList[infId] = nil
 		end
 	end
 	for cargoId, cargoData in pairs(self.CargoList) do
 		if not cargoData:IsAlive() then
+			self.CargoList[cargoId]:Destroy()
 			self.CargoList[cargoId] = nil
 		end
 	end
 end
 
-function LOGISTICS:OnEventPlayerEnterUnit( EventData )
-	self:E( "EVENT Fired : " .. routines.utils.oneLineSerialize(EventData))	
-	self:ScheduleOnce( 5, self.AddTransportMenu,  self, EventData.IniUnit )
---			function()
---				self:AddTransportMenu( EventData.IniUnit )				
---			end
---		)	
---	local MenuSpawn = MENU_GROUP:New( PlayerGroup, "Transport Tasks")
---	local MenuSpawnTroops = MENU_GROUP_COMMAND:New( PlayerGroup, "Spawn Troops", MenuSpawn, LOGISTICS.SpawnInfGroup, LOGISTICS, PlayerGroup )
-end
+
 
 
 
