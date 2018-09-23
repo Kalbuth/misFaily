@@ -5,9 +5,15 @@ local multiRefObjects = {
 local obj1 = {
 	["Zones"] = {
 		["Center"] = {
-			["RedIndex"] = 3;
+			["RedIndex"] = 4;
 		};
 		["North"] = {
+			["RedIndex"] = 3;
+		};
+		["NovoCoast"] = {
+			["RedIndex"] = 2;
+		};
+		["NovoNorth"] = {
 			["RedIndex"] = 2;
 		};
 	};

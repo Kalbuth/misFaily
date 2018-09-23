@@ -304,7 +304,6 @@ MenuSpawnDogMirage = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mir
 
 
 
-
 -- WWII Target Practice Menu
 SetBlueWWIIPlanes = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue"):FilterStart()
 Spawn_RED_109_Tgt = SPAWN:New("Template WWII RED Single 109")
@@ -780,6 +779,65 @@ function SaveConfig()
 	local FailyLfs = require('lfs')
 	persistence.store( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' , ConfigVars)
 end
+
+logisticsParameters = {}
+
+-- Prefix used in Logistics Zone Names
+logisticsParameters.LogisticsZonePrefixes = {
+	"pickzone",
+}
+
+
+-- Prefix used in Group names able to do infantry transport tasks
+logisticsParameters.InfantryPlayersPrefixes = {
+	"120",
+	"320",
+	"420",
+	"520",
+}
+
+-- Prefix used in Group names able to do any transport tasks
+logisticsParameters.TransportPlayersPrefixes = {
+	"120",
+	"320",
+	"420",
+	"520",
+}
+
+-- Templates of infantry groups - Format : ["<Menu group name>"] = "ME Group template name"
+logisticsParameters.InfantryTemplates = {
+	["Basic Squad"] = "Infantry1",
+	["AA Squad"] = "Infantry2",
+}
+
+logisticsParameters.SlingloadPrefixes = {
+	"TEMPLATE_SLING_1500",
+	"TEMPLATE_SLING_3000",
+}
+
+logisticsParameters.SlingloadTemplates = {
+	["Cargo 1500kg"] = "TEMPLATE_SLING_1500",
+	["Cargo 3000Kg"] = "TEMPLATE_SLING_3000",
+}
+
+logisticsParameters.CargoTemplatesWeight = {
+	["TEMPLATE_AVENGER"] = 1400,
+	["TEMPLATE_LINEBACKER"] = 2700,
+	["TEMPLATE_CHAPARRAL"] = 4200,
+	["TEMPLATE_AMMO"] = 1000,
+	["TEMPLATE_SA6"] = 7300,
+}
+
+logisticsParameters.CargoTemplatesName = {
+	["TEMPLATE_AVENGER"] = "M1097 Avenger (1.4T)",
+	["TEMPLATE_LINEBACKER"] = "M6 Linebacker (2.7T)",
+	["TEMPLATE_CHAPARRAL"] = "M48 Chaparral with Supply (4.2T)",
+	["TEMPLATE_AMMO"] = "Supply Truck (1T)",
+	["TEMPLATE_SA6"] = "SA6 Site (7.3T)",
+}
+
+
+FailyLogitics = LOGISTICS:New( logisticsParameters )
 
 AdminGroup = GROUP:FindByName("ADMIN")
 AdminMenu = MENU_GROUP:New(AdminGroup, "Admin")
