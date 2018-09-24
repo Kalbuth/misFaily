@@ -1,10 +1,4 @@
-Zone_SA19_1 = ZONE:New( "SA19-1 Zone" )
-Zone_SA19_2 = ZONE:New( "SA19-2 Zone" )
-Zone_SA10 = ZONE:New( "SA10_Zone" )
-Zone_EWR = ZONE:New( "EWR Zone" )
-Zone_BUK = ZONE:New( "SA11 Zone" )
-Zone_KUB = ZONE:New( "SA6 Zone" )
-Zone_Template = ZONE:New( "Template Zone" )
+
 Zones_WWII = {}
 Zones_WWII[1] = ZONE:New( "ZONE_WWII_MAYSKIY" )
 
@@ -66,39 +60,23 @@ SetAllBlue = SET_GROUP:New():FilterCoalitions( "blue" )
 
 
 
+FailyAWACS = false
 
-Spawn_M29_1 = SPAWN:New("AI Agressor 1")
-Spawn_M29_2 = SPAWN:New("AI Agressor 2")
-Spawn_M23_1 = SPAWN:New("AI Agressor 3")
-Spawn_M23_2 = SPAWN:New("AI Agressor 4")
-Spawn_Tanker_M2K = SPAWN:New( "Template Tanker M2K" ):InitLimit(1,0)
-Spawn_Tanker_Other = SPAWN:New( "Template KC 135" ):InitLimit(1,0)
-Spawn_Ground_1 = SPAWN:New("RUS_ARMOR_L_1")
-Spawn_Ground_2 = SPAWN:New("RUS_ARMOR_L_2")
-Spawn_SAM_1 = SPAWN:New("SAM SA19-1"):InitLimit(7, 0)
-Spawn_SAM_2 = SPAWN:New("SAM SA19-2"):InitLimit(7, 0)
-Spawn_SAM_3 = SPAWN:New("SAM SA10-1"):InitLimit(12, 0)
-Spawn_SAM_4 = SPAWN:New("SAM BUK"):InitLimit(9, 0)
-Spawn_SAM_5 = SPAWN:New("SAM KUB"):InitLimit(8, 0)
-Spawn_Inf_RUS_1 = SPAWN:New("infantry FARP 1")
-Spawn_EWR_1 = SPAWN:New("Template EWR1"):InitLimit(3, 0)
-Spawn_P51 = SPAWN:New("Template P51D")
-Spawn_Bf109 = SPAWN:New("Template Bf109")
-Spawn_FW190 = SPAWN:New("Template FW190")
-Spawn_Mig15 = SPAWN:New("Template Mig15")
-Spawn_F86 = SPAWN:New("Template F86")
-Spawn_Blue_P51 = SPAWN:New("Template blue P51")
+Spawn_Tanker_M2K = SPAWN:New( "Template Tanker M2K" ):InitLimit(1,0):InitCleanUp ( 120 )
+Spawn_Tanker_Other = SPAWN:New( "Template KC 135" ):InitLimit(1,0):InitCleanUp ( 120 )
+Spawn_Tanker_Navy = SPAWN:New( "Template Tanker Navy" ):InitLimit(1,0):InitCleanUp ( 120 )
+Spawn_AWACS = SPAWN:New( "Template Blue AWACS" ):InitLimit(1,0):InitCleanUp ( 120 ):OnSpawnGroup( 
+	function (SpawnGroup) 
+		FailyAWACS = SpawnGroup
+	end
+	):SpawnScheduled(900,0)
+
+-- Spawn_Blue_P51 = SPAWN:New("Template blue P51")
 -- Spawn_Blue_bf109 = SPAWN:New("Template blue Bf109")
-Spawn_Blue_fw190 = SPAWN:New("Template blue FW190")
-Spawn_Kuta_SAM = SPAWN:New("Template Kutaisi SAM")
-Spawn_Kuta_1 = SPAWN:New("Template Kutaisi 1")
-Spawn_Kuta_2 = SPAWN:New("Template Kutaisi 2")
-Spawn_Kuta_3 = SPAWN:New("Template Kutaisi 3")
-Spawn_Kuta_4 = SPAWN:New("Template Kutaisi 4")
-Spawn_Kuta_5 = SPAWN:New("Template Kutaisi 5")
+-- Spawn_Blue_fw190 = SPAWN:New("Template blue FW190")
+
 Spawn_Sukh_Mi8 = SPAWN:New("Template Sukh Mi8")
 Spawn_Sukh_Ka50 = SPAWN:New("Template Sukh Ka50")
-Spawn_Gud_Su25T = SPAWN:New("Template Gud Su25T")
 Spawn_Mayk_Mig21 = SPAWN:New("template red mig21 maykop")
 Spawn_Dog_Mig21 = SPAWN:New("Template Dogfight Mig21")
 Spawn_Dog_Mig29A = SPAWN:New("Template Dogfight Mig29A")
@@ -107,7 +85,6 @@ Spawn_Dog_Su27 = SPAWN:New("Template Dogfight Su27")
 Spawn_Dog_Mirage = SPAWN:New("Template Dogfight Mirage")
 
 
-Zone_Achig = ZONE:New("Achigvara")
 
 Sukh_CAP_Zone = ZONE:New('Sukh_Patrol')
 
@@ -122,6 +99,11 @@ Sukh_CAP_Spawn = SPAWN
 	:InitLimit(4, 2)
 	:OnSpawnGroup( 
 		function (SpawnGroup)
+			local DCSControllable = SpawnGroup:GetDCSObject()
+			if DCSControllable then 
+				local Controller = DCSControllable:getController()
+				Controller:setOption( AI.Option.Air.id.PROHIBIT_AG , true )
+			end
 			SpawnGroup.PatrolZone = AI_CAP_ZONE:New( Sukh_CAP_Zone, 5000, 8000, 500, 800 )
 			SpawnGroup.PatrolZone:SetControllable( SpawnGroup )
 			SpawnGroup.PatrolZone:ManageFuel( 0.3 , 600 )
@@ -247,20 +229,9 @@ SetMirageClients = SET_CLIENT:New():FilterPrefixes("Pilot M2000C"):FilterStart()
 
 Tanker_M2K = Spawn_Tanker_M2K:Spawn()
 Tanker_Other = Spawn_Tanker_Other:Spawn()
+Tanker_Navy = Spawn_Tanker_Navy:Spawn()
 
 
-function ActivateSochCAP( event )
-	if event.id == world.event.S_EVENT_SHOT and mist.utils.get2DDist(event.initiator:getPosition().p, trigger.misc.getZone("Fight_Zone").point) < 100000 then
-		if event.initiator:getCoalition() == coalition.side.BLUE then
-			for CAPGroupId, CAPGroupData in pairs ( SetSochCAP:GetSet() ) do
-				local CAPGroup = CAPGroupData
-				CAPGroupData:OptionROEWeaponFree()
-			end
-		end
-	end
-
-end
-mist.addEventHandler(ActivateSochCAP)
 
 local function SpawnNewGroup( Template )
    Spawn_Plane = Template:Spawn()
@@ -270,6 +241,13 @@ local function ReSpawnGroup( Template )
    Spawn_Plane = Template:ReSpawn(1)
 end
 
+local function ReSpawnAWACS()
+	if FailyAWACS then
+		FailyAWACS:Destroy()
+	end
+  FailyAWACS = Spawn_AWACS:Spawn()
+end
+
 local function ReSpawnGroupInZone( Template, Zone )
 	Spawn_Group = Template:SpawnInZone(Zone, 1)
 end
@@ -277,18 +255,6 @@ end
 
 
 
-local function CleanSAM()
-	SetSAMGroup:ForEachGroupNotInZone( Zone_Template,
-  --- @param Group#GROUP MooseGroup
-		function( MooseGroup )
-			DCSGroup = MooseGroup:GetDCSObject()
-			if DCSGroup:isExist() then
-				MESSAGE:New(MooseGroup.GroupName, 5):ToBlue()
-				MooseGroup:Destroy()
-			end
-		end
-	)
-end
 
 
 
@@ -297,10 +263,6 @@ ZONE_Red_CSAR_1 = ZONE:New("Fight_Zone")
 CSAR_1 = CSAR_HANDLER:New( ZONE_Red_CSAR_1, { Spawn_Red_CSAR, } )
 MenuCoalitionBlue = MENU_COALITION:New( coalition.side.BLUE, "Coalition")
 MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane", MenuCoalitionBlue )
-MenuSpawnPlaneM29_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_1 )
-MenuSpawnPlaneM29_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig29", MenuSpawnPlane, SpawnNewGroup, Spawn_M29_2 )
-MenuSpawnPlaneM23_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 Mig23", MenuSpawnPlane, SpawnNewGroup, Spawn_M23_1 )
-MenuSpawnPlaneM23_2 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig23", MenuSpawnPlane, SpawnNewGroup, Spawn_M23_2 )
 MenuSpawnPlaneM21_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig21 Maykop", MenuSpawnPlane, SpawnNewGroup, Spawn_Mayk_Mig21 )
 MenuSpawnPlaneOther = MENU_COALITION:New( coalition.side.BLUE, "Other", MenuSpawnPlane)
 MenuSpawnPlaneP51 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 1 P51D", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_P51 )
@@ -313,7 +275,6 @@ MenuSpawnKorea = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Korean Furbal
 -- MenuSpawnCircus = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Bf 109 Practice target", MenuSpawnPlaneOther, SpawnPractice109 )
 MenuSpawnPlaneMi8 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Mi8", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Mi8 )
 MenuSpawnPlaneKa50 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Ka50", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Sukh_Ka50 )
-MenuSpawnPlaneSu25T = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Su25T", MenuSpawnPlaneOther, SpawnNewGroup, Spawn_Gud_Su25T )
 MenuSpawnPlaneControl = MENU_COALITION:New( coalition.side.BLUE, "Controle des spawns", MenuSpawnPlane)
 MenuSpawnPlaneStopSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Stopper le spawn auto a Sochi", MenuSpawnPlaneControl, StartSetSpawning, Sukh_CAP_Spawn )
 MenuSpawnPlaneStartSochi =  MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Demarrer le spawn auto a Sochi", MenuSpawnPlaneControl,  StopSetSpawning, Sukh_CAP_Spawn )
@@ -339,9 +300,12 @@ MenuSpawnGroundClearRnd = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Detr
 --MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn GCI RED", MenuSpawnSAM, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
 --MenuCleanSAM = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Destroy all SAMs", MenuSpawnSAM, CleanSAM )
 
-MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker", MenuCoalitionBlue )
+MenuSpawnTanker = MENU_COALITION:New( coalition.side.BLUE, "Spawn Tanker & AWACS", MenuCoalitionBlue )
 MenuSpawnPlaneTankerM2K = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker M2K", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_M2K )
 MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker KC135", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Other )
+MenuSpawnPlaneTankerOther = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Tanker PA", MenuSpawnTanker, ReSpawnGroup, Spawn_Tanker_Navy )
+MenuSpawnPlaneAWACS = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "ReSpawn AWACS", MenuSpawnTanker, ReSpawnAWACS )
+
 
 MenuSpawnDogfight = MENU_COALITION:New( coalition.side.BLUE, "Dogfight")
 MenuSpawnDogM21 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mig21", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mig21 )
@@ -351,8 +315,6 @@ MenuSpawnDogSu27 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Su27"
 MenuSpawnDogMirage = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn Mirage", MenuSpawnDogfight, SpawnNewGroup, Spawn_Dog_Mirage )
 
 
-MenuSpawnRUS = MENU_COALITION:New( coalition.side.RED, "Spawn Assets" )
-MenuSpawnEWR = MENU_COALITION_COMMAND:New( coalition.side.RED, "Spawn GCI", MenuSpawnRUS, ReSpawnGroupInZone, Spawn_EWR_1, Zone_EWR )
 
 -- WWII Target Practice Menu
 SetBlueWWIIPlanes = SET_GROUP:New():FilterPrefixes( "41.MinVody Blue"):FilterStart()
@@ -419,6 +381,18 @@ CallSigns = {
 	[19]= "Badger",
 }
 
+-- ConfigVars = {}
+-- ConfigVars.UnpackedUnits = {}
+-- ConfigVars.Zones = {}
+ConfigVars = {}
+do
+	local FailyLfs = require('lfs')
+	ConfigVars = persistence.load( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' )
+end
+BASE:E("Config Variable : " .. routines.utils.oneLineSerialize(ConfigVars))
+BASE:E(routines.utils.oneLineSerialize(ConfigVars.Zones))
+
+
 function ListReports(GroupSet)
 	local Report = "We have on ground on zone :\n"
 	for groupName, groupData in pairs(GroupSet.Set) do
@@ -482,46 +456,64 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 	SpawnGroup.Detection:InitDetectOptical( true )
 	SpawnGroup.Detection.LocalGroup = SpawnGroup.GroupName
 	SpawnGroup.Detection:Start()
+	local tmpCoord = SpawnGroup:GetCoordinate()
+	SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : false" )
 	SpawnGroup.Detection.OnAfterDetect = function (self, From, Event, To)
 		local Count = 0
 		local SpawnGroup = GROUP:FindByName(self.LocalGroup)
 		for Index, Value in pairs( self.DetectedObjects ) do
 			Count = Count + 1
 		end
+		ennemyAlive = false
 		if Count > 0 then 
-			if SpawnGroup.Engaged == false then 
-				SpawnGroup.Engaged = true
-				local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
-				SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
-				SpawnGroup:EnRouteTaskFAC( 5000, 5)
-			end
-			if SpawnGroup.LastTransmission > 4 then 
-				SpawnGroup.LastTransmission = -1
-				Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
-				local DetectionReport = GenerateReport(self.DetectedItems, SpawnGroup.Callsign , SpawnGroup.Frequency / 1000000)
-				local Speech = {
-					[1] = "this_is",
-					[2] = SpawnGroup.RadioName,
-					[3] = SpawnGroup.Id,
-				}
-				for Id, Item in pairs(self.DetectedItems) do
-					Speech[#Speech + 1] = "pause"
-					Speech[#Speech + 1] = "armored_targets"
-					Speech[#Speech + 1] = "at"
-					Count = Count + 1
-					local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
-					Speech = CoordToSpeech(Speech, Coord)
+			for Id, Item in pairs(self.DetectedItems) do
+				Item.Set:ForEachUnit( function ( UnitObject )
+					if UnitObject:IsAlive() then
+						ennemyAlive = true
+					end
 				end
---						SpawnGroup.Radio:SetSubtitle( DetectionReport, 60 )
---						SpawnGroup.Radio:Broadcast()
---						SpawnGroup.Radio:NewUnitTransmission("beaconsilent.ogg", DetectionReport, 30, SpawnGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
-				RadioSpeech(SpawnGroup, Speech)
+				)
+			end
+			if ennemyAlive then
+				if SpawnGroup.Engaged == false then 
+					SpawnGroup.Engaged = true
+					local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
+					SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
+					SpawnGroup:EnRouteTaskFAC( 5000, 5)
+				end
+				if SpawnGroup.LastTransmission > 4 then 
+					SpawnGroup.LastTransmission = -1
+					Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
+					local Speech = {
+						[1] = "this_is",
+						[2] = SpawnGroup.RadioName,
+						[3] = SpawnGroup.Id,
+					}
+					for Id, Item in pairs(self.DetectedItems) do
+						Speech[#Speech + 1] = "pause"
+						Speech[#Speech + 1] = "armored_targets"
+						Speech[#Speech + 1] = "at"
+						Count = Count + 1
+						local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
+						Speech = CoordToSpeech(Speech, Coord)
+					end
+					RadioSpeech(SpawnGroup, Speech)
+				end
 			end
 			SpawnGroup.LastTransmission = SpawnGroup.LastTransmission + 1
 		end
-		if ( ( Count == 0 ) and ( SpawnGroup.Engaged == true ) ) then
+		if ( ( not ennemyAlive ) and ( SpawnGroup.Engaged == true ) ) then
 			SpawnGroup.Engaged = false
 			SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
+		end
+		local tmpCoord = SpawnGroup:GetCoordinate()
+		if SpawnGroup.Mark then
+			tmpCoord:RemoveMark ( SpawnGroup.Mark )
+		end
+		if SpawnGroup.Engaged then
+			SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : true " )
+		else
+			SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : false " )
 		end
 	end
 end
@@ -553,6 +545,16 @@ Warzone.blue = {}
 
 Warzone.red.Templates = {}
 Warzone.blue.Templates = {}
+Warzone.red.CAS = {}
+Warzone.red.CAS.CASGroups = {}
+Warzone.red.CAS.AI_CAS = AI_CAS_ZONE:New( ZONE:New("RED_CAS_PATROL_1"), 100, 300, 80, 120, ZONE:New("RED_CAS_PATROL_1") )
+Warzone.red.CAS.CASSpawn = SPAWN:New("Template_RU_Heli_CAS_Center"):InitLimit(2, 0):OnSpawnGroup(
+			function (SpawnGroup)
+				Warzone.red.CAS.CASGroups[#Warzone.red.CAS.CASGroups + 1] = SpawnGroup
+				Warzone.red.CAS.AI_CAS:SetControllable( SpawnGroup )
+				Warzone.red.CAS.AI_CAS:__Start(1)
+			end)
+			:SpawnScheduled(1200,0)
 for groupName, groupData in pairs( SetRedObj.Set ) do
   Warzone.red.Templates[#Warzone.red.Templates + 1] = groupName
 end
@@ -566,12 +568,21 @@ Warzone.red.DefSpawn = SPAWN:New(Warzone.red.Templates[1]):InitRandomizeTemplate
 Constants = {}
 Constants.North = {}
 Constants.Center = {}
+Constants.NovoNorth = {}
+Constants.NovoCoast = {}
 Constants.North.GroundFreq = 131
 Constants.North.RadioOffset = 0
 Constants.North.RedIndex = 2
 Constants.Center.GroundFreq = 137
 Constants.Center.RadioOffset = 200
 Constants.Center.RedIndex = 3
+Constants.NovoNorth.GroundFreq = 132
+Constants.NovoNorth.RadioOffset = 400
+Constants.NovoNorth.RedIndex = 1
+Constants.NovoCoast.GroundFreq = 133
+Constants.NovoCoast.RadioOffset = 600
+Constants.NovoCoast.RedIndex = 2
+
 
 for Zone, Values in pairs(Constants) do
 	Warzone[Zone] = {}
@@ -591,7 +602,7 @@ for Zone, Values in pairs(Constants) do
 	Warzone[Zone].red.OffGroup = SPAWN:New("GROUP_DYN_R_" .. Zone):InitRandomizeTemplate(Warzone.red.Templates):InitLimit(12, 0)
 	Warzone[Zone].blue.OffGroup = SPAWN:New("GROUP_DYN_B_" .. Zone):InitRandomizeTemplate(Warzone.blue.Templates):InitLimit(12, 0)
 	Warzone[Zone].blue.OffSet = SET_GROUP:New()
-	Warzone[Zone].blue.DefSpawn = SPAWN:New(Warzone.blue.Templates[1]):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100):OnSpawnGroup( BlueSpawnFunc, Zone, false )
+	Warzone[Zone].blue.DefSpawn = SPAWN:NewWithAlias(Warzone.blue.Templates[1], "Template_" .. Zone .. "_DEF_"):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100):OnSpawnGroup( BlueSpawnFunc, Zone, false )
 	Warzone[Zone].red.SpawnZone = ZONE_GROUP:New(Zone .. "_Red_Spawn", GROUP:FindByName("GROUP_DYN_R_" .. Zone), 500)
 	Warzone[Zone].blue.SpawnZone = ZONE_GROUP:New(Zone .. "_Blue_Spawn", GROUP:FindByName("GROUP_DYN_B_" .. Zone), 500)
 	Warzone[Zone].red.CAS = SPAWN:New("Template_RU_Heli_CAS_" .. Zone):InitCleanUp( 60 )
@@ -599,6 +610,18 @@ for Zone, Values in pairs(Constants) do
 
 	Warzone[Zone].ZoneSet = SET_GROUP:New():FilterPrefixes( "ZONE_CAPTURE_" .. Zone ):FilterOnce()
 	Warzone[Zone].RedIndex = Values.RedIndex
+--	if setContains(ConfigVars, "Zones") then
+	if ConfigVars.Zones then
+--		if setContains(ConfigVars.Zones, Zone) then
+		if ConfigVars.Zones[Zone] then
+--			if setContains(ConfigVars.Zones[Zone], "RedIndex") then
+			if ConfigVars.Zones[Zone].RedIndex then
+				BASE:E("Using Config File Defined RedIndex "  .. ConfigVars.Zones[Zone].RedIndex .. " for Zone : " .. Zone)
+				Warzone[Zone].RedIndex = ConfigVars.Zones[Zone].RedIndex
+			end
+		end
+	end
+	-- ConfigVars.Zones[Zone].RedIndex = Values.RedIndex
 	Warzone[Zone].Zones = {}
 	Warzone[Zone].ZoneCaptureCoalition = {}
 
@@ -614,22 +637,11 @@ for Zone, Values in pairs(Constants) do
 		Warzone[Zone].ZoneCaptureCoalition[id] = {}
 		if id <= Warzone[Zone].RedIndex then
 			Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.RED )
+			Warzone.red.DefSpawn:SpawnInZone( Warzone[Zone].ZoneCaptureCoalition[id].zcc.Zone, true )
 			else
+			BASE:E("Check for Warzone id : " .. id .. " in Zone " .. Zone)
 			Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.BLUE )
-		end
-		Warzone[Zone].ZoneCaptureCoalition[id].zcc.OnEnterEmpty = function ( self, From, Event, To )
-			if From == "Guarded" then
-				local tutu = ""
-			else
-				local Coalition = self:GetCoalition()
-				local ZoneName = self:GetZoneName()
-				if Coalition == coalition.side.RED then
-					Warzone.red.DefSpawn:SpawnInZone( self.Zone, true )
-				end
-				if Coalition == coalition.side.BLUE then
-					Warzone[Zone].blue.DefSpawn:SpawnInZone( self.Zone, true )
-				end
-			end
+			Warzone[Zone].blue.DefSpawn:SpawnInZone( Warzone[Zone].ZoneCaptureCoalition[id].zcc.Zone, true )
 		end
 		Warzone[Zone].ZoneCaptureCoalition[id].zcc:Mark()
 		Warzone[Zone].ZoneCaptureCoalition[id].zcc:Start( 5, 60 )
@@ -638,11 +650,13 @@ for Zone, Values in pairs(Constants) do
 			local Coalition = self:GetCoalition()
 			if Coalition == coalition.side.RED then
 				Warzone[Zone].RedIndex = Warzone[Zone].RedIndex + 1
+				ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
 				local reinforcement = Warzone[Zone].red.OffGroup:Spawn()
 				reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex], false, 15, "On Road" )
 			end
 			if Coalition == coalition.side.BLUE then
 				Warzone[Zone].RedIndex = Warzone[Zone].RedIndex - 1
+				ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
 				local reinforcement = Warzone[Zone].blue.OffGroup:Spawn()
 				reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex + 1], false, 15, "On Road" )
 			end
@@ -772,3 +786,71 @@ do
 		end, {}, 5, 60
 	)	
 end
+
+function SaveConfig()
+	local FailyLfs = require('lfs')
+	persistence.store( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' , ConfigVars)
+end
+
+logisticsParameters = {}
+
+-- Prefix used in Logistics Zone Names
+logisticsParameters.LogisticsZonePrefixes = {
+	"pickzone",
+}
+
+
+-- Prefix used in Group names able to do infantry transport tasks
+logisticsParameters.InfantryPlayersPrefixes = {
+	"120",
+	"320",
+	"420",
+	"520",
+}
+
+-- Prefix used in Group names able to do any transport tasks
+logisticsParameters.TransportPlayersPrefixes = {
+	"120",
+	"320",
+	"420",
+	"520",
+}
+
+-- Templates of infantry groups - Format : ["<Menu group name>"] = "ME Group template name"
+logisticsParameters.InfantryTemplates = {
+	["Basic Squad"] = "Infantry1",
+	["AA Squad"] = "Infantry2",
+}
+
+logisticsParameters.SlingloadPrefixes = {
+	"TEMPLATE_SLING_1500",
+	"TEMPLATE_SLING_3000",
+}
+
+logisticsParameters.SlingloadTemplates = {
+	["Cargo 1500kg"] = "TEMPLATE_SLING_1500",
+	["Cargo 3000Kg"] = "TEMPLATE_SLING_3000",
+}
+
+logisticsParameters.CargoTemplatesWeight = {
+	["TEMPLATE_AVENGER"] = 1400,
+	["TEMPLATE_LINEBACKER"] = 2700,
+	["TEMPLATE_CHAPARRAL"] = 4200,
+	["TEMPLATE_AMMO"] = 1000,
+	["TEMPLATE_SA6"] = 7300,
+}
+
+logisticsParameters.CargoTemplatesName = {
+	["TEMPLATE_AVENGER"] = "M1097 Avenger (1.4T)",
+	["TEMPLATE_LINEBACKER"] = "M6 Linebacker (2.7T)",
+	["TEMPLATE_CHAPARRAL"] = "M48 Chaparral with Supply (4.2T)",
+	["TEMPLATE_AMMO"] = "Supply Truck (1T)",
+	["TEMPLATE_SA6"] = "SA6 Site (7.3T)",
+}
+
+
+FailyLogitics = LOGISTICS:New( logisticsParameters )
+
+AdminGroup = GROUP:FindByName("ADMIN")
+AdminMenu = MENU_GROUP:New(AdminGroup, "Admin")
+MENU_GROUP_COMMAND:New(AdminGroup, "Save Config", AdminMenu, SaveConfig)
