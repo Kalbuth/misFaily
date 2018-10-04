@@ -7,7 +7,7 @@ cfg =
     ["version"] = 1,
     ["missionList"] = 
     {
-        [1] = "C:\\Users\\Administrateur\\Saved Games\\DCS.openbeta\\Slmod\\Missions\\Battle_of_Kuban_2018_v2.miz",
+        [1] = "C:\\Users\\Administrateur\\Saved Games\\DCS.openbeta\\Slmod\\Missions\\Battle_of_Kuban_2018_v4.miz",
     }, -- end of ["missionList"]
     ["advanced"] = 
     {

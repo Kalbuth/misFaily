@@ -792,6 +792,13 @@ function SaveConfig()
 	persistence.store( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' , ConfigVars)
 end
 
+MarkedGroups = {}
+MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("CG Patulacci")
+MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("CG Robichet")
+PermanentMarkers = {}
+for Id, Group in pairs(MarkedGroups) do
+	PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName)
+end
 
 function checkAssets(Logi, ConfigVars)
 	BASE:E("Regular asset checking")
@@ -817,6 +824,13 @@ function checkAssets(Logi, ConfigVars)
 	end
 	ConfigVars["UnpackedUnits"] = pers
 	SaveConfig()
+	for Id, Mark in pairs(PermanentMarkers) do
+		COORDINATE:RemoveMark( Mark )
+	end
+	PermanentMarkers = {}
+	for Id, Group in pairs(MarkedGroups) do
+		PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName)
+	end
 end
 
 
@@ -908,3 +922,10 @@ DataSaver = SCHEDULER:New(nil, checkAssets, {FailyLogistics, ConfigVars}, 300, 3
 AdminGroup = GROUP:FindByName("ADMIN")
 AdminMenu = MENU_GROUP:New(AdminGroup, "Admin")
 MENU_GROUP_COMMAND:New(AdminGroup, "Save Config", AdminMenu, SaveConfig)
+
+Arty_Group = GROUP:FindByName("ARTY_GROUP_TEST")
+Arty_Object = ARTY:New( Arty_Group )
+BASE:E({Arty_Object})
+Arty_Object.Debug = false
+Arty_Object:SetMarkAssignmentsOn()
+Arty_Object:Start()
