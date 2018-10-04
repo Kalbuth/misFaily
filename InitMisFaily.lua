@@ -792,6 +792,49 @@ function SaveConfig()
 	persistence.store( FailyLfs.writedir()..'/scripts/misFaily/MissionConfig.lua' , ConfigVars)
 end
 
+MarkedGroups = {}
+MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("CG Patulacci")
+MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("CG Robichet")
+PermanentMarkers = {}
+for Id, Group in pairs(MarkedGroups) do
+	PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName)
+end
+
+function checkAssets(Logi, ConfigVars)
+	BASE:E("Regular asset checking")
+	BASE:E(Logi)
+	BASE:E(ConfigVars)
+	ConfigVars["Generation"] = ConfigVars["Generation"] + 1
+	local pers = {}
+	for Id, Asset in pairs(Logi.DeployedAssets) do
+		local g = Asset.Deployed
+		if not Asset.Generation then
+			Asset.Generation = ConfigVars.Generation
+		end
+		if g:IsAlive() then
+			local persInfo = {}
+			persInfo.Template = Asset.Template
+			persInfo.x = Asset.x
+			persInfo.y = Asset.y
+			persInfo.z = Asset.z
+			persInfo.Player = Asset.Player
+			persInfo.Generation = Asset.Generation
+			pers[#pers + 1] = persInfo
+		end
+	end
+	ConfigVars["UnpackedUnits"] = pers
+	SaveConfig()
+	for Id, Mark in pairs(PermanentMarkers) do
+		COORDINATE:RemoveMark( Mark )
+	end
+	PermanentMarkers = {}
+	for Id, Group in pairs(MarkedGroups) do
+		PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName)
+	end
+end
+
+
+
 logisticsParameters = {}
 
 -- Prefix used in Logistics Zone Names
@@ -849,8 +892,40 @@ logisticsParameters.CargoTemplatesName = {
 }
 
 
-FailyLogitics = LOGISTICS:New( logisticsParameters )
+FailyLogistics = LOGISTICS:New( logisticsParameters )
+-- Doing Asset check every 5 minutes
+-- 864 * 5 minutes is 3 days, all assets will last 3 days
+MaxGeneration = 863
+for Id, Asset in pairs(ConfigVars["UnpackedUnits"]) do
+	if ( ConfigVars["Generation"] - Asset.Generation ) > MaxGeneration then
+		ConfigVars["UnpackedUnits"][Id] = nil
+	else
+		local DeploySpawn = Asset.Template
+		local v2 = COORDINATE:New( Asset.x, Asset.y , Asset.z )
+		local depGroup = FailyLogistics["DeploySpawn"][DeploySpawn]:SpawnFromVec2( v2:GetVec2() )
+		local pers = {}
+		pers.Deployed = depGroup
+		pers.Template = DeploySpawn
+		pers.x = depGroup:GetCoordinate()["x"]
+		pers.y = depGroup:GetCoordinate()["y"]
+		pers.z = depGroup:GetCoordinate()["z"]
+		pers.Player = Asset.Player
+		pers.Generation = Asset.Generation
+		FailyLogistics.DeployedAssets[#FailyLogistics.DeployedAssets + 1 ] = pers
+		v2:MarkToCoalitionBlue( FailyLogistics["DeploySpawn"][DeploySpawn]["MenuName"] .. "\nDeployed by : " .. Asset.Player )
+	end
+
+end
+
+DataSaver = SCHEDULER:New(nil, checkAssets, {FailyLogistics, ConfigVars}, 300, 300 )
 
 AdminGroup = GROUP:FindByName("ADMIN")
 AdminMenu = MENU_GROUP:New(AdminGroup, "Admin")
 MENU_GROUP_COMMAND:New(AdminGroup, "Save Config", AdminMenu, SaveConfig)
+
+Arty_Group = GROUP:FindByName("ARTY_GROUP_TEST")
+Arty_Object = ARTY:New( Arty_Group )
+BASE:E({Arty_Object})
+Arty_Object.Debug = false
+Arty_Object:SetMarkAssignmentsOn()
+Arty_Object:Start()

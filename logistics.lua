@@ -86,6 +86,7 @@ function LOGISTICS:New( Parameters )
 	self.CargoList = {}
 	self.PlayerGroups = {}
 	self.DeploySpawn = {}
+	self.DeployedAssets = {}
 	self.InfantryTemplates = Parameters.InfantryTemplates
 	for TroopName, TroopTemplate in pairs(Parameters.InfantryTemplates) do
 		self.TroopSpawn[TroopName] = SPAWN
@@ -99,6 +100,7 @@ function LOGISTICS:New( Parameters )
 		self.DeploySpawn[TemplateName] = SPAWN:New(TemplateName)
 		self.DeploySpawn[TemplateName].MenuName = MenuName
 		self.DeploySpawn[TemplateName].Weight = Parameters.CargoTemplatesWeight[TemplateName]
+		self.DeploySpawn[TemplateName].TemplateName = TemplateName
 	end
 --	self:HandleEvent( EVENTS.PlayerEnterUnit )
 	self.Check = SCHEDULER:New( nil, 
@@ -119,6 +121,7 @@ function LOGISTICS:New( Parameters )
 			)
 		end, {}, 10, 10
 	)
+	return self
 end
 
 function LOGISTICS:CheckCargos()
@@ -353,6 +356,7 @@ function LOGISTICS:DeployAsset( PlayerGroup, DeploySpawn )
 			end
 			TotalWeight = TotalWeight + StaticWeight
 			self:E("Total Weight : " .. TotalWeight )
+			StaticData.StaticID = StaticID
 			SlingList[#SlingList + 1] = StaticData
 		end
 	end
@@ -362,15 +366,25 @@ function LOGISTICS:DeployAsset( PlayerGroup, DeploySpawn )
 		
 		local coord = PlayerCoord:GetRandomVec2InRadius( 60, 40 )
 --		local PlayerZone = ZONE_GROUP:New( "DEPLOY_ZONE_" .. PlayerGroup:GetName(), PlayerGroup , 100 )
-		DeploySpawn:SpawnFromVec2( coord )
+		local depGroup = DeploySpawn:SpawnFromVec2( coord )
 		for id, Static in pairs(SlingList) do
 			Static.CargoObject:Destroy()
+			self.CargoList[Static.StaticID] = nil
 		end
 		local playerUnit = PlayerGroup:GetUnits()[1]
 		local playerName = playerUnit:GetPlayerName()
 		local playerCoalition = PlayerGroup:GetCoalition()
 		MESSAGE:New( DeploySpawn.MenuName .. " has been deployed by " .. playerName , 10, "Logistics"):ToCoalition( playerCoalition )
 		COORDINATE:NewFromVec2( coord ):MarkToCoalition( DeploySpawn.MenuName .. "\nDeployed by : " .. playerName, playerCoalition  )
+		self:E({coord, depGroup:GetCoordinate()})
+		local pers = {}
+		pers.Deployed = depGroup
+		pers.Template = DeploySpawn.TemplateName
+		pers.x = depGroup:GetCoordinate()["x"]
+		pers.y = depGroup:GetCoordinate()["y"]
+		pers.z = depGroup:GetCoordinate()["z"]
+		pers.Player = playerName
+		self.DeployedAssets[#self.DeployedAssets + 1 ] = pers
 	else
 		MESSAGE:New("Not enough supply nearby to deploy " .. DeploySpawn.MenuName .. " Bring more.", 10, "Logistics"):ToGroup( PlayerGroup )
 	end
