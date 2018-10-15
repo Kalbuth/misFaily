@@ -260,7 +260,6 @@ end
 
 Spawn_Red_CSAR = SPAWN:New ("Template_RED_CSAR")
 ZONE_Red_CSAR_1 = ZONE:New("Fight_Zone")
-CSAR_1 = CSAR_HANDLER:New( ZONE_Red_CSAR_1, { Spawn_Red_CSAR, } )
 MenuCoalitionBlue = MENU_COALITION:New( coalition.side.BLUE, "Coalition")
 MenuSpawnPlane = MENU_COALITION:New( coalition.side.BLUE, "Spawn Ennemy Plane", MenuCoalitionBlue )
 MenuSpawnPlaneM21_1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Spawn 2 Mig21 Maykop", MenuSpawnPlane, SpawnNewGroup, Spawn_Mayk_Mig21 )
@@ -795,9 +794,11 @@ end
 MarkedGroups = {}
 MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("CG Patulacci")
 MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("CG Robichet")
+MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("FARP_NORD_SUPPORT")
+MarkedGroups[#MarkedGroups + 1] = GROUP:FindByName("FARP_EAST_SUPPORT")
 PermanentMarkers = {}
 for Id, Group in pairs(MarkedGroups) do
-	PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName)
+	PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName .. "\nCap : " .. Group:GetHeading() )
 end
 
 function checkAssets(Logi, ConfigVars)
@@ -808,17 +809,19 @@ function checkAssets(Logi, ConfigVars)
 	local pers = {}
 	for Id, Asset in pairs(Logi.DeployedAssets) do
 		local g = Asset.Deployed
+		g:GetCoordinate():RemoveMark(g.mark)
 		if not Asset.Generation then
 			Asset.Generation = ConfigVars.Generation
 		end
 		if g:IsAlive() then
 			local persInfo = {}
 			persInfo.Template = Asset.Template
-			persInfo.x = Asset.x
-			persInfo.y = Asset.y
-			persInfo.z = Asset.z
+			persInfo.x = g:GetCoordinate()["x"]
+			persInfo.y = g:GetCoordinate()["y"]
+			persInfo.z = g:GetCoordinate()["z"]
 			persInfo.Player = Asset.Player
 			persInfo.Generation = Asset.Generation
+			persInfo.isArty = Asset.isArty
 			pers[#pers + 1] = persInfo
 		end
 	end
@@ -829,7 +832,7 @@ function checkAssets(Logi, ConfigVars)
 	end
 	PermanentMarkers = {}
 	for Id, Group in pairs(MarkedGroups) do
-		PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName)
+		PermanentMarkers[#PermanentMarkers + 1] = Group:GetCoordinate():MarkToCoalitionBlue( Group.GroupName .. "\nCap : " .. Group:GetHeading() )
 	end
 end
 
@@ -863,6 +866,7 @@ logisticsParameters.TransportPlayersPrefixes = {
 logisticsParameters.InfantryTemplates = {
 	["Basic Squad"] = "Infantry1",
 	["AA Squad"] = "Infantry2",
+	["AT Squad"] = "Infantry3",
 }
 
 logisticsParameters.SlingloadPrefixes = {
@@ -881,6 +885,10 @@ logisticsParameters.CargoTemplatesWeight = {
 	["TEMPLATE_CHAPARRAL"] = 4200,
 	["TEMPLATE_AMMO"] = 1000,
 	["TEMPLATE_SA6"] = 7300,
+	["TEMPLATE_MLRS"] = 6400,
+	["TEMPLATE_PALADIN"] = 9800,
+	["TEMPLATE_NONA"] = 2900,
+	["TEMPLATE_GVOSDIKA"] = 4400,
 }
 
 logisticsParameters.CargoTemplatesName = {
@@ -889,6 +897,22 @@ logisticsParameters.CargoTemplatesName = {
 	["TEMPLATE_CHAPARRAL"] = "M48 Chaparral with Supply (4.2T)",
 	["TEMPLATE_AMMO"] = "Supply Truck (1T)",
 	["TEMPLATE_SA6"] = "SA6 Site (7.3T)",
+	["TEMPLATE_MLRS"] = "MLRS Arty (6.4T)",
+	["TEMPLATE_PALADIN"] = "Paladin Arty (9.8T)",
+	["TEMPLATE_NONA"] = "Nona Arty (2.9T)",
+	["TEMPLATE_GVOSDIKA"] = "Gvosdika Arty (4.4T)",
+}
+
+logisticsParameters.isArty = {
+	["TEMPLATE_AVENGER"] = false,
+	["TEMPLATE_LINEBACKER"] = false,
+	["TEMPLATE_CHAPARRAL"] = false,
+	["TEMPLATE_AMMO"] = false,
+	["TEMPLATE_SA6"] = true,
+	["TEMPLATE_MLRS"] = true,
+	["TEMPLATE_PALADIN"] = true,
+	["TEMPLATE_NONA"] = true,
+	["TEMPLATE_GVOSDIKA"] = true,
 }
 
 
@@ -903,6 +927,11 @@ for Id, Asset in pairs(ConfigVars["UnpackedUnits"]) do
 		local DeploySpawn = Asset.Template
 		local v2 = COORDINATE:New( Asset.x, Asset.y , Asset.z )
 		local depGroup = FailyLogistics["DeploySpawn"][DeploySpawn]:SpawnFromVec2( v2:GetVec2() )
+		if FailyLogistics["DeploySpawn"][DeploySpawn].isArty then
+			depGroup.arty = ARTY:New( depGroup )
+			depGroup.arty:SetMarkAssignmentsOn()
+			depGroup.arty:Start()
+		end
 		local pers = {}
 		pers.Deployed = depGroup
 		pers.Template = DeploySpawn
@@ -911,8 +940,8 @@ for Id, Asset in pairs(ConfigVars["UnpackedUnits"]) do
 		pers.z = depGroup:GetCoordinate()["z"]
 		pers.Player = Asset.Player
 		pers.Generation = Asset.Generation
+		pers.Deployed.mark = v2:MarkToCoalitionBlue( FailyLogistics["DeploySpawn"][DeploySpawn]["MenuName"] .. "\nDeployed by : " .. Asset.Player .. "\nGroup : " .. depGroup.GroupName )
 		FailyLogistics.DeployedAssets[#FailyLogistics.DeployedAssets + 1 ] = pers
-		v2:MarkToCoalitionBlue( FailyLogistics["DeploySpawn"][DeploySpawn]["MenuName"] .. "\nDeployed by : " .. Asset.Player )
 	end
 
 end

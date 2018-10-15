@@ -62,7 +62,13 @@ logisticsParameters.CargoTemplatesName = {
 	["TEMPLATE_AMMO"] = "Supply Truck (1T)",
 	["TEMPLATE_SA6"] = "SA6 Site (7.3T)",
 }
-
+logisticsParameters.isArty = {
+	["TEMPLATE_AVENGER"] = false,
+	["TEMPLATE_LINEBACKER"] = false,
+	["TEMPLATE_CHAPARRAL"] = false,
+	["TEMPLATE_AMMO"] = false,
+	["TEMPLATE_SA6"] = true,
+}
 -- New Class declaration : handling Logistics :
 
 -- LOGISTICS = BASE:New()
@@ -101,6 +107,7 @@ function LOGISTICS:New( Parameters )
 		self.DeploySpawn[TemplateName].MenuName = MenuName
 		self.DeploySpawn[TemplateName].Weight = Parameters.CargoTemplatesWeight[TemplateName]
 		self.DeploySpawn[TemplateName].TemplateName = TemplateName
+		self.DeploySpawn[TemplateName].isArty = Parameters.isArty[TemplateName]
 	end
 --	self:HandleEvent( EVENTS.PlayerEnterUnit )
 	self.Check = SCHEDULER:New( nil, 
@@ -375,15 +382,21 @@ function LOGISTICS:DeployAsset( PlayerGroup, DeploySpawn )
 		local playerName = playerUnit:GetPlayerName()
 		local playerCoalition = PlayerGroup:GetCoalition()
 		MESSAGE:New( DeploySpawn.MenuName .. " has been deployed by " .. playerName , 10, "Logistics"):ToCoalition( playerCoalition )
-		COORDINATE:NewFromVec2( coord ):MarkToCoalition( DeploySpawn.MenuName .. "\nDeployed by : " .. playerName, playerCoalition  )
+		depgroup.mark = COORDINATE:NewFromVec2( coord ):MarkToCoalition( DeploySpawn.MenuName .. "\nDeployed by : " .. playerName .. "\nGroup : " .. depGroup.GroupName, playerCoalition  )
 		self:E({coord, depGroup:GetCoordinate()})
 		local pers = {}
+		if DeploySpawn.isArty then
+			depGroup.arty = ARTY:New( depGroup )
+			depGroup.arty:SetMarkAssignmentsOn()
+			depGroup.arty:Start()
+		end
 		pers.Deployed = depGroup
 		pers.Template = DeploySpawn.TemplateName
 		pers.x = depGroup:GetCoordinate()["x"]
 		pers.y = depGroup:GetCoordinate()["y"]
 		pers.z = depGroup:GetCoordinate()["z"]
 		pers.Player = playerName
+		pers.isArty = DeploySpawn.isArty
 		self.DeployedAssets[#self.DeployedAssets + 1 ] = pers
 	else
 		MESSAGE:New("Not enough supply nearby to deploy " .. DeploySpawn.MenuName .. " Bring more.", 10, "Logistics"):ToGroup( PlayerGroup )
