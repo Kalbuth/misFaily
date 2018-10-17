@@ -112,7 +112,7 @@ function LOGISTICS:New( Parameters )
 --	self:HandleEvent( EVENTS.PlayerEnterUnit )
 	self.Check = SCHEDULER:New( nil, 
 		function( args )
-			self:E( "Regular check with args : " .. routines.utils.oneLineSerialize(args))
+		--	self:E( "Regular check with args : " .. routines.utils.oneLineSerialize(args))
 			args:CheckCargos()
 		end, { self }, 5, 60
 	)

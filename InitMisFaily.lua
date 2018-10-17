@@ -479,30 +479,20 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 					local StopZone = ZONE_GROUP:New("Stop_Zone_" .. SpawnGroup.GroupName, SpawnGroup, 300)
 					SpawnGroup:TaskRouteToZone( StopZone, true, 25, "Vee" )
 					SpawnGroup:EnRouteTaskFAC( 5000, 5)
-				end
-				if SpawnGroup.LastTransmission > 4 then 
-					SpawnGroup.LastTransmission = -1
-					Warzone:E( "DETECTED GROUP COMPOSITION IS :  " .. routines.utils.oneLineSerialize(self.DetectedItems) )
-					local Speech = {
-						[1] = "this_is",
-						[2] = SpawnGroup.RadioName,
-						[3] = SpawnGroup.Id,
-					}
 					for Id, Item in pairs(self.DetectedItems) do
-						Speech[#Speech + 1] = "pause"
-						Speech[#Speech + 1] = "armored_targets"
-						Speech[#Speech + 1] = "at"
-						Count = Count + 1
-						local Coord = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
-						Speech = CoordToSpeech(Speech, Coord)
+						SpawnGroup.EnnemyPosition = COORDINATE:NewFromVec2(Item.Zone.LastVec2)
 					end
-					RadioSpeech(SpawnGroup, Speech)
+					Warzone[Region].blue.Engaged[SpawnGroup.GroupName] = SpawnGroup
+					Warzone:E("New nme detected",Warzone[Region].blue.Engaged )
 				end
 			end
 			SpawnGroup.LastTransmission = SpawnGroup.LastTransmission + 1
 		end
 		if ( ( not ennemyAlive ) and ( SpawnGroup.Engaged == true ) ) then
 			SpawnGroup.Engaged = false
+			if Warzone[Region].blue.Engaged[SpawnGroup.GroupName] then
+				Warzone[Region].blue.Engaged[SpawnGroup.GroupName] = nil
+			end
 			SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
 		end
 		local tmpCoord = SpawnGroup:GetCoordinate()
@@ -517,12 +507,23 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 	end
 end
 
-function AskReport(Zone)
-	local Report = ListReports(Warzone[Zone].blue.OffSet)
+function AskReport(DetectingGroup)
+--	local Report = ListReports(Warzone[Zone].blue.OffSet)
 --	Warzone[Zone].blue.Radio:SetSubtitle( Report, 30 )
 --	Warzone[Zone].blue.Radio:Broadcast()
-	Warzone[Zone].blue.Radio:NewUnitTransmission("beaconsilent.ogg", Report, 30, Warzone[Zone].blue.GroundFreq, radio.modulation.AM, false):Broadcast()
-	Warzone:E("COMM USAGE ON " .. Warzone[Zone].blue.GroundFreq .. " MHz : " .. Report)
+	--Warzone[Zone].blue.Radio:NewUnitTransmission("beaconsilent.ogg", Report, 30, Warzone[Zone].blue.GroundFreq, radio.modulation.AM, false):Broadcast()
+	--Warzone:E("COMM USAGE ON " .. Warzone[Zone].blue.GroundFreq .. " MHz : " .. Report)
+	local Speech = {
+		[1] = "this_is",
+		[2] = DetectingGroup.RadioName,
+		[3] = DetectingGroup.Id,
+	}
+	Speech[#Speech + 1] = "pause"
+	Speech[#Speech + 1] = "armored_targets"
+	Speech[#Speech + 1] = "at"
+	local Coord = DetectingGroup.EnnemyPosition
+	Speech = CoordToSpeech(Speech, Coord)
+	RadioSpeech(DetectingGroup, Speech)
 end
 
 function RadioCheck(Zone)
@@ -533,15 +534,15 @@ function RadioCheck(Zone)
 	Warzone:E(Report)
 end
 
-MenuWarzone = MENU_COALITION:New( coalition.side.BLUE, "Ground Operations")
+
 
 
 Warzone = BASE:New()
 Warzone.ClassName = "MAIN_WARZONE"
 Warzone.red = {}
 Warzone.blue = {}
-
-
+Warzone.MenuWarzone = MENU_COALITION:New( coalition.side.BLUE, "Ground Operations")
+Warzone.ZoneList = {}
 Warzone.red.Templates = {}
 Warzone.blue.Templates = {}
 Warzone.red.CAS = {}
@@ -561,6 +562,28 @@ for groupName, groupData in pairs( SetBlueObj.Set ) do
   Warzone.blue.Templates[#Warzone.blue.Templates + 1] = groupName
 end
 
+function Warzone:UpdateWarzoneMenu()
+	self:E("updating Warzone Menu")
+	for _, Zone in pairs(self.ZoneList) do
+		self:E(Zone)
+		-- Add missing menus
+		for GroupName, GroupData in pairs(Warzone[Zone].blue.Engaged) do
+			self:E({"GROUP ENGAGED", GroupName})
+			if not Warzone[Zone].MenuZone.Commands[GroupName] then
+				Warzone[Zone].MenuZone.Commands[GroupName] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, GroupData.RadioName .. " " .. GroupData.Id .. " Report", Warzone[Zone].MenuZone.Main, AskReport, GroupData )
+			end
+		end
+		-- Remove unneeded menus
+		for GroupName, MenuData in pairs(Warzone[Zone].MenuZone.Commands) do
+			if not Warzone[Zone].blue.Engaged[GroupName] then
+				MenuData:Remove()
+				Warzone[Zone].MenuZone.Commands[GroupName] = nil
+			end
+		end
+	end
+end
+
+
 Warzone.red.DefSpawn = SPAWN:New(Warzone.red.Templates[1]):InitRandomizeTemplate(Warzone.red.Templates):InitRandomizeUnits(true, 300, 100)
 -- Warzone.blue.DefSpawn = SPAWN:New(Warzone.blue.Templates[1]):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100)
 
@@ -572,21 +595,31 @@ Constants.NovoCoast = {}
 Constants.North.GroundFreq = 131
 Constants.North.RadioOffset = 0
 Constants.North.RedIndex = 2
+Constants.North.Name = "Zone Nord"
 Constants.Center.GroundFreq = 137
 Constants.Center.RadioOffset = 200
 Constants.Center.RedIndex = 3
+Constants.Center.Name = "Zone Anapa Krymsk"
 Constants.NovoNorth.GroundFreq = 132
 Constants.NovoNorth.RadioOffset = 400
 Constants.NovoNorth.RedIndex = 1
+Constants.NovoNorth.Name = "Zone Novorossyisk Krymsk"
 Constants.NovoCoast.GroundFreq = 133
 Constants.NovoCoast.RadioOffset = 600
 Constants.NovoCoast.RedIndex = 2
+Constants.NovoCoast.Name = "Zone cotiere Novorossyisk"
 
 
 for Zone, Values in pairs(Constants) do
 	Warzone[Zone] = {}
 	Warzone[Zone].red = {}
 	Warzone[Zone].blue = {}
+	Warzone[Zone].blue.Engaged = {}
+	Warzone.ZoneList[#Warzone.ZoneList +1] = Zone
+	Warzone[Zone].Name = Values.Name
+	Warzone[Zone].MenuZone = {}
+	Warzone[Zone].MenuZone.Main = MENU_COALITION:New( coalition.side.BLUE, Values.Name, Warzone.MenuWarzone )
+	Warzone[Zone].MenuZone.Commands = {}
 	Warzone[Zone].blue.GroundFreq = Values.GroundFreq
 	Warzone[Zone].blue.RadioOffset = Values.RadioOffset
 	Warzone[Zone].blue.Transmitter = GROUP:FindByName("RADIO_" .. Zone)
@@ -713,9 +746,11 @@ for Zone, Values in pairs(Constants) do
 			end
 		)
 	Warzone[Zone].red.OffGroup:SpawnScheduled( 2400 , 0.4 )
-	MENU_COALITION_COMMAND:New( coalition.side.BLUE, Zone .. " Zone radio check", MenuWarzone, RadioCheck, Zone )
-	MENU_COALITION_COMMAND:New( coalition.side.BLUE, Zone .. " Zone Report", MenuWarzone, AskReport, Zone )
+	--MENU_COALITION_COMMAND:New( coalition.side.BLUE, Zone .. " Zone radio check", Warzone.MenuWarzone, RadioCheck, Zone )
+	--MENU_COALITION_COMMAND:New( coalition.side.BLUE, Zone .. " Zone Report", Warzone.MenuWarzone, AskReport, Zone )
 end
+
+Warzone.MenuUpdater = SCHEDULER:New(nil, Warzone.UpdateWarzoneMenu, { Warzone }, 60, 60 )
 
 
 function CoordToSpeech(Speech, Coord)
@@ -760,7 +795,7 @@ function RadioSpeech(RadioGroup, SpeechTest)
 			end, {}, Delay
 		)	
 		Delay = Delay + 0.2
-		BASE:E( "Next speech delay is : " .. Delay)
+		-- BASE:E( "Next speech delay is : " .. Delay)
 	end
 end
 
