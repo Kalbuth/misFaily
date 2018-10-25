@@ -42,6 +42,11 @@ logisticsParameters.SlingloadPrefixes = {
 	"TEMPLATE_SLING_3000",
 }
 
+logisticsParameters.SlingloadWeights = {
+	["Cargo 1500kg"] = 1500,
+	["Cargo 3000Kg"] = 3000
+}
+
 logisticsParameters.SlingloadTemplates = {
 	["Cargo 1500kg"] = "TEMPLATE_SLING_1500",
 	["Cargo 3000Kg"] = "TEMPLATE_SLING_3000",
@@ -101,9 +106,12 @@ function LOGISTICS:New( Parameters )
 	for StaticId, StaticName in pairs( Parameters.SlingloadTemplates ) do
 		self.SlingSpawn[StaticName] = SPAWNSTATIC:NewFromStatic(StaticName)
 		self.SlingSpawn[StaticName].MenuName = StaticId
+		self.SlingSpawn[StaticName].Weight = logisticsParameters.SlingloadWeights[StaticId]
 	end
 	for TemplateName, MenuName in pairs( Parameters.CargoTemplatesName) do 
-		self.DeploySpawn[TemplateName] = SPAWN:New(TemplateName)
+		-- change DeploySpawn to BASE. SPAWN created later with Alias for issue #3
+		-- self.DeploySpawn[TemplateName] = SPAWN:New(TemplateName)
+		self.DeploySpawn[TemplateName] =BASE:New()
 		self.DeploySpawn[TemplateName].MenuName = MenuName
 		self.DeploySpawn[TemplateName].Weight = Parameters.CargoTemplatesWeight[TemplateName]
 		self.DeploySpawn[TemplateName].TemplateName = TemplateName
@@ -333,7 +341,9 @@ function LOGISTICS:SpawnSling( PlayerGroup, SlingSpawn )
 --		local LastSling = SlingSpawn:SpawnFromPointVec2( Tcoord:GetVec2() , dir )
 		local plyr = PlayerGroup:GetPlayerUnits()[1]
 		local slingName = plyr:GetPlayerName() .. "'s " .. SlingSpawn.MenuName
-		self.CargoList[ #self.CargoList + 1 ] = CARGO_CRATE:New( LastSling, "Supplies", slingName )
+		local tmpCargoCrate = CARGO_CRATE:New( LastSling, "Supplies", slingName )
+		tmpCargoCrate.Weight = SlingSpawn.Weight
+		self.CargoList[ #self.CargoList + 1 ] = tmpCargoCrate
 		self:RegisterStatic( LastSling )
 	else
 		MESSAGE:New("You are not in any Logistics Zone.", 10, "Logistics"):ToGroup( PlayerGroup )
@@ -357,9 +367,12 @@ function LOGISTICS:DeployAsset( PlayerGroup, DeploySpawn )
 		local StaticCoord = StaticData:GetCoordinate()
 		if ( StaticCoord:Get3DDistance( PlayerCoord ) < 100 ) then
 			local StaticWeight = 0
-			local DCSStatic = StaticData.CargoObject:GetDCSObject()
-			if DCSStatic then 
-				StaticWeight = DCSStatic:getCargoWeight()
+			--local DCSStatic = StaticData.CargoObject:GetDCSObject()
+			--if DCSStatic then 
+				--StaticWeight = DCSStatic:getCargoWeight()
+			--end
+			if StaticData.Weight then
+				StaticWeight = StaticData.Weight
 			end
 			TotalWeight = TotalWeight + StaticWeight
 			self:E("Total Weight : " .. TotalWeight )
@@ -373,16 +386,19 @@ function LOGISTICS:DeployAsset( PlayerGroup, DeploySpawn )
 		
 		local coord = PlayerCoord:GetRandomVec2InRadius( 60, 40 )
 --		local PlayerZone = ZONE_GROUP:New( "DEPLOY_ZONE_" .. PlayerGroup:GetName(), PlayerGroup , 100 )
-		local depGroup = DeploySpawn:SpawnFromVec2( coord )
+		-- Issue #3 : need to add player name in Spawned asset name
+		local playerUnit = PlayerGroup:GetUnits()[1]
+		local playerName = playerUnit:GetPlayerName()
+		local SpawnObject = SPAWN:NewWithAlias(DeploySpawn.TemplateName, "Spawned_" .. DeploySpawn.TemplateName .. "_by_" .. playerName)
+		local depGroup = SpawnObject:SpawnFromVec2( coord )
 		for id, Static in pairs(SlingList) do
 			Static.CargoObject:Destroy()
 			self.CargoList[Static.StaticID] = nil
 		end
-		local playerUnit = PlayerGroup:GetUnits()[1]
-		local playerName = playerUnit:GetPlayerName()
+		
 		local playerCoalition = PlayerGroup:GetCoalition()
 		MESSAGE:New( DeploySpawn.MenuName .. " has been deployed by " .. playerName , 10, "Logistics"):ToCoalition( playerCoalition )
-		depgroup.mark = COORDINATE:NewFromVec2( coord ):MarkToCoalition( DeploySpawn.MenuName .. "\nDeployed by : " .. playerName .. "\nGroup : " .. depGroup.GroupName, playerCoalition  )
+		depGroup.mark = COORDINATE:NewFromVec2( coord ):MarkToCoalition( DeploySpawn.MenuName .. "\nDeployed by : " .. playerName .. "\nGroup : " .. depGroup.GroupName, playerCoalition  )
 		self:E({coord, depGroup:GetCoordinate()})
 		local pers = {}
 		if DeploySpawn.isArty then

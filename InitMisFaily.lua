@@ -799,27 +799,7 @@ function RadioSpeech(RadioGroup, SpeechTest)
 	end
 end
 
-do
--- validate functions with a dummy unit broadcasting shit every 60s on 136MHz
-	local RadioGroup = GROUP:FindByName("TEST_RADIO")
-	RadioGroup.Radio = RadioGroup:GetRadio()
-	RadioGroup.Frequency = 136000000
 
-	local SpeechTest = {
-		[1] = "this_is",
-		[2] = "Axeman",
-		[3] = "3",
-		[4] = "pause",
-		[5] = "armored_targets",
-		[6] = "at",
-	}
-	local SpeechTest = CoordToSpeech(SpeechTest, COORDINATE:NewFromVec2(RadioGroup:GetVec2()))
-	SCHEDULER:New( nil, 
-		function()
-			RadioSpeech(RadioGroup, SpeechTest)
-		end, {}, 5, 60
-	)	
-end
 
 function SaveConfig()
 	local FailyLfs = require('lfs')
@@ -912,6 +892,11 @@ logisticsParameters.SlingloadPrefixes = {
 logisticsParameters.SlingloadTemplates = {
 	["Cargo 1500kg"] = "TEMPLATE_SLING_1500",
 	["Cargo 3000Kg"] = "TEMPLATE_SLING_3000",
+}
+
+logisticsParameters.SlingloadWeights = {
+	["Cargo 1500kg"] = 1500,
+	["Cargo 3000Kg"] = 3000
 }
 
 logisticsParameters.CargoTemplatesWeight = {

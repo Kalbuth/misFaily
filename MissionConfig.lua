@@ -4,10 +4,10 @@ local multiRefObjects = {
 } -- multiRefObjects
 local obj1 = {
 	["Zones"] = {
-		["NovoNorth"] = {
+		["NovoCoast"] = {
 			["RedIndex"] = 2;
 		};
-		["NovoCoast"] = {
+		["NovoNorth"] = {
 			["RedIndex"] = 2;
 		};
 		["Center"] = {
@@ -17,6 +17,7 @@ local obj1 = {
 			["RedIndex"] = 3;
 		};
 	};
+	["Generation"] = 269;
 	["UnpackedUnits"] = {
 		[1] = {
 			["y"] = 43.00004196167;
@@ -27,6 +28,5 @@ local obj1 = {
 			["Player"] = "Whisper";
 		};
 	};
-	["Generation"] = 265;
 }
 return obj1
