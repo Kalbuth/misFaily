@@ -944,23 +944,25 @@ for Id, Asset in pairs(ConfigVars["UnpackedUnits"]) do
 	if ( ConfigVars["Generation"] - Asset.Generation ) > MaxGeneration then
 		ConfigVars["UnpackedUnits"][Id] = nil
 	else
-		local DeploySpawn = Asset.Template
+		local DeploySpawn = FailyLogistics["DeploySpawn"][Asset.Template]
+		local playerName = Asset.Player
 		local v2 = COORDINATE:New( Asset.x, Asset.y , Asset.z )
-		local depGroup = FailyLogistics["DeploySpawn"][DeploySpawn]:SpawnFromVec2( v2:GetVec2() )
-		if FailyLogistics["DeploySpawn"][DeploySpawn].isArty then
+		local SpawnObject = SPAWN:NewWithAlias(DeploySpawn.TemplateName, "Spawned_" .. DeploySpawn.TemplateName .. "_by_" .. playerName)
+		local depGroup = SpawnObject:SpawnFromVec2( v2:GetVec2() )
+		if DeploySpawn.isArty then
 			depGroup.arty = ARTY:New( depGroup )
 			depGroup.arty:SetMarkAssignmentsOn()
 			depGroup.arty:Start()
 		end
 		local pers = {}
 		pers.Deployed = depGroup
-		pers.Template = DeploySpawn
+		pers.Template = DeploySpawn.TemplateName
 		pers.x = depGroup:GetCoordinate()["x"]
 		pers.y = depGroup:GetCoordinate()["y"]
 		pers.z = depGroup:GetCoordinate()["z"]
 		pers.Player = Asset.Player
 		pers.Generation = Asset.Generation
-		pers.Deployed.mark = v2:MarkToCoalitionBlue( FailyLogistics["DeploySpawn"][DeploySpawn]["MenuName"] .. "\nDeployed by : " .. Asset.Player .. "\nGroup : " .. depGroup.GroupName )
+		pers.Deployed.mark = v2:MarkToCoalitionBlue( DeploySpawn["MenuName"] .. "\nDeployed by : " .. Asset.Player .. "\nGroup : " .. depGroup.GroupName )
 		FailyLogistics.DeployedAssets[#FailyLogistics.DeployedAssets + 1 ] = pers
 	end
 
