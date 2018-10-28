@@ -459,7 +459,20 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 	SpawnGroup.Mark = tmpCoord:MarkToCoalitionBlue( "Group : " .. SpawnGroup.Callsign .. "\nFrequency : " .. (SpawnGroup.Frequency / 1000000) .. "MHz.\nEngaged : false" )
 	SpawnGroup.Detection.OnAfterDetect = function (self, From, Event, To)
 		local Count = 0
-		local SpawnGroup = GROUP:FindByName(self.LocalGroup)
+		-- local SpawnGroup = GROUP:FindByName(self.LocalGroup)
+		if (self.DetectionSetGroup:Count() == 0) then
+			self:E({"No more group detecting, stopping Detection Process", self})
+			self:Stop()
+			self = nil
+			return
+		end
+		SpawnGroup = self.DetectionSetGroup:GetFirst()
+		if not SpawnGroup:IsAlive() then
+			self:E("Detecting group is dead, Stopping Detection Process")
+			self:Stop()
+			self=nil
+			return
+		end
 		for Index, Value in pairs( self.DetectedObjects ) do
 			Count = Count + 1
 		end
