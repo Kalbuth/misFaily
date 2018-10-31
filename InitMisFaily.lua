@@ -561,13 +561,13 @@ Warzone.blue.Templates = {}
 Warzone.red.CAS = {}
 Warzone.red.CAS.CASGroups = {}
 Warzone.red.CAS.AI_CAS = AI_CAS_ZONE:New( ZONE:New("RED_CAS_PATROL_1"), 100, 300, 80, 120, ZONE:New("RED_CAS_PATROL_1") )
-Warzone.red.CAS.CASSpawn = SPAWN:New("Template_RU_Heli_CAS_Center"):InitLimit(2, 0):OnSpawnGroup(
-			function (SpawnGroup)
-				Warzone.red.CAS.CASGroups[#Warzone.red.CAS.CASGroups + 1] = SpawnGroup
-				Warzone.red.CAS.AI_CAS:SetControllable( SpawnGroup )
-				Warzone.red.CAS.AI_CAS:__Start(1)
-			end)
-			:SpawnScheduled(1200,0)
+--Warzone.red.CAS.CASSpawn = SPAWN:New("Template_RU_Heli_CAS_Center"):InitLimit(2, 0):OnSpawnGroup(
+--			function (SpawnGroup)
+--				Warzone.red.CAS.CASGroups[#Warzone.red.CAS.CASGroups + 1] = SpawnGroup
+--				Warzone.red.CAS.AI_CAS:SetControllable( SpawnGroup )
+--				Warzone.red.CAS.AI_CAS:__Start(1)
+--			end)
+--			:SpawnScheduled(1200,0)
 for groupName, groupData in pairs( SetRedObj.Set ) do
   Warzone.red.Templates[#Warzone.red.Templates + 1] = groupName
 end
@@ -601,14 +601,14 @@ Warzone.red.DefSpawn = SPAWN:New(Warzone.red.Templates[1]):InitRandomizeTemplate
 -- Warzone.blue.DefSpawn = SPAWN:New(Warzone.blue.Templates[1]):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100)
 
 Constants = {}
-Constants.North = {}
+-- Constants.North = {}
 Constants.Center = {}
 Constants.NovoNorth = {}
 Constants.NovoCoast = {}
-Constants.North.GroundFreq = 131
-Constants.North.RadioOffset = 0
-Constants.North.RedIndex = 2
-Constants.North.Name = "Zone Nord"
+-- Constants.North.GroundFreq = 131
+-- Constants.North.RadioOffset = 0
+-- Constants.North.RedIndex = 2
+-- Constants.North.Name = "Zone Nord"
 Constants.Center.GroundFreq = 137
 Constants.Center.RadioOffset = 200
 Constants.Center.RedIndex = 3
@@ -650,8 +650,8 @@ for Zone, Values in pairs(Constants) do
 	Warzone[Zone].blue.DefSpawn = SPAWN:NewWithAlias(Warzone.blue.Templates[1], "Template_" .. Zone .. "_DEF_"):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100):OnSpawnGroup( BlueSpawnFunc, Zone, false )
 	Warzone[Zone].red.SpawnZone = ZONE_GROUP:New(Zone .. "_Red_Spawn", GROUP:FindByName("GROUP_DYN_R_" .. Zone), 500)
 	Warzone[Zone].blue.SpawnZone = ZONE_GROUP:New(Zone .. "_Blue_Spawn", GROUP:FindByName("GROUP_DYN_B_" .. Zone), 500)
-	Warzone[Zone].red.CAS = SPAWN:New("Template_RU_Heli_CAS_" .. Zone):InitCleanUp( 60 )
-	Warzone[Zone].blue.CAS = SPAWN:New("Template_US_Heli_CAS_" .. Zone):InitCleanUp( 60 )
+	Warzone[Zone].red.CAS = SPAWN:New("Template_RU_Heli_CAS_" .. Zone):InitCleanUp( 60 ):InitLimit(2, 0)
+	Warzone[Zone].blue.CAS = SPAWN:New("Template_US_Heli_CAS_" .. Zone):InitCleanUp( 60 ):InitLimit(2, 0)
 
 	Warzone[Zone].ZoneSet = SET_GROUP:New():FilterPrefixes( "ZONE_CAPTURE_" .. Zone ):FilterOnce()
 	Warzone[Zone].RedIndex = Values.RedIndex
