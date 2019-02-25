@@ -436,7 +436,9 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 	SpawnGroup.Callsign = CallSigns[Callsign] .. " " .. Id
 	SpawnGroup.Engaged = false
 	SpawnGroup.LastTransmission = 11
+	SpawnGroup.Offensive = false
 	if Offensive then
+		SpawnGroup.Offensive = true
 		SpawnGroup:TaskRouteToZone( Warzone[Region].Zones[Warzone[Region].RedIndex], false, 15, "On Road" )
 		SpawnGroup.TargetZone = Warzone[Region].Zones[Warzone[Region].RedIndex]
 	end
@@ -506,7 +508,9 @@ function BlueSpawnFunc(SpawnGroup, Region, Offensive)
 			if Warzone[Region].blue.Engaged[SpawnGroup.GroupName] then
 				Warzone[Region].blue.Engaged[SpawnGroup.GroupName] = nil
 			end
-			SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
+			if SpawnGroup.Offensive then
+				SpawnGroup:TaskRouteToZone( Warzone.North.Zones[Warzone.North.RedIndex], false, 15, "On Road" )
+			end
 		end
 		local tmpCoord = SpawnGroup:GetCoordinate()
 		if SpawnGroup.Mark then
@@ -558,6 +562,8 @@ Warzone.MenuWarzone = MENU_COALITION:New( coalition.side.BLUE, "Ground Operation
 Warzone.ZoneList = {}
 Warzone.red.Templates = {}
 Warzone.blue.Templates = {}
+Warzone.red.WHTemplate = SPAWNSTATIC:NewFromStatic("WH_R")
+Warzone.blue.WHTemplate = SPAWNSTATIC:NewFromStatic("WH_B")
 Warzone.red.CAS = {}
 Warzone.red.CAS.CASGroups = {}
 Warzone.red.CAS.AI_CAS = AI_CAS_ZONE:New( ZONE:New("RED_CAS_PATROL_1"), 100, 300, 80, 120, ZONE:New("RED_CAS_PATROL_1") )
@@ -596,6 +602,75 @@ function Warzone:UpdateWarzoneMenu()
 	end
 end
 
+function CreateWH(Warzone, Zone, id, name, radius, static, groupData, side)
+	BASE:E({"CREATEWH" , Zone, id, name, radius, static, groupData, side})
+	BASE:E({"CREATEWH" , "ID", STATIC:FindByName("Static_" .. Zone .. "_" .. id):GetID()})
+	Warzone[Zone].WH[id] = WAREHOUSE:New(STATIC:FindByName("Static_" .. Zone .. "_" .. id), "WareHouse_" .. Zone .. "_" .. id)
+	Warzone[Zone].WH[id]:SetAutoDefenceOn()
+	Warzone[Zone].Zones[id] = ZONE_GROUP:New(name .. "_Zone", groupData, radius)
+	Warzone[Zone].WH[id]:SetWarehouseZone(Warzone[Zone].Zones[id])
+	Warzone[Zone].WH[id]:Start()
+	Warzone[Zone].ZoneCaptureCoalition[id] = {}
+	-- Warzone[Zone].WH[id]:ChangeCountry(country.id.RUSSIA)
+	--Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.RED )
+	local Def = Warzone[side].DefSpawn:SpawnInZone( Warzone[Zone].WH[id].zone, true )
+	Warzone[Zone].WH[id]:AddAsset(Def)
+	Warzone[Zone].WH[id].WarzoneName = Zone
+	Warzone[Zone].WH[id].OnAfterCaptured = function ( self, From, Event, To, Coalition, Country )
+		local Coalition = Coalition
+		if Coalition == coalition.side.RED then
+			Warzone[Zone].RedIndex = Warzone[Zone].RedIndex + 1
+			ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
+			local reinforcement = Warzone[Zone].red.OffGroup:Spawn()
+			Warzone[Zone].red.WH:AddAsset(reinforcement)
+			self:AddRequest(Warzone[Zone].red.WH, WAREHOUSE.Descriptor.ATTRIBUTE, WAREHOUSE.Attribute.GROUND_APC, 1)
+			-- reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex], false, 15, "On Road" )
+		end
+		if Coalition == coalition.side.BLUE then
+			Warzone[Zone].RedIndex = Warzone[Zone].RedIndex - 1
+			ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
+			local reinforcement = Warzone[Zone].blue.OffGroup:Spawn()
+			Warzone[Zone].blue.WH:AddAsset(reinforcement)
+			self:AddRequest(Warzone[Zone].blue.WH, WAREHOUSE.Descriptor.ATTRIBUTE, WAREHOUSE.Attribute.GROUND_APC, 1)
+			-- reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex + 1], false, 15, "On Road" )
+		end
+	end
+
+	Warzone[Zone].WH[id].OnAfterAttacked = function ( self, From, Event, To, Coalition, Country )
+		local Coalition = Coalition
+		local AttackCoord = self.Zone:GetRandomCoordinate()
+		if Coalition == coalition.side.RED then
+			HeliGroup = Warzone[Zone].red.CAS:Spawn()
+		end
+		if Coalition == coalition.side.BLUE then
+			HeliGroup = Warzone[Zone].blue.CAS:Spawn()
+		end
+		local HeliCoord = HeliGroup:GetCoordinate()
+		local CurrentWaypoint = HeliCoord:WaypointAirTurningPoint( COORDINATE.WaypointAltType.RADIO, 110 )
+		local ToWaypoint = AttackCoord:WaypointAirTurningPoint( COORDINATE.WaypointAltType.RADIO, 110 )
+		HeliGroup:Route( { CurrentWaypoint , ToWaypoint }, 1 )
+--		HeliGroup:TaskRouteToZone( self.Zone, true, 120, "Vee" )
+		HeliGroup:OptionROEWeaponFree()
+	end
+	Warzone[Zone].WH[id].OnAfterSelfRequest = function (self, From, Event, To, groupset, request)
+		if self:GetCoalition() == coalition.side.BLUE then
+			for _, _group in pairs(groupset:GetSetObjects()) do
+				local group = _group
+				BlueSpawnFunc(group, self.WarzoneName, false)
+			end
+		end
+	end
+	Warzone[Zone].WH[id].OnAfterDefeated = function(From, Event, To)
+		if self.autodefence then
+			for _,request in pairs(self.defending) do
+				for _,_group in pairs(request.cargogroupset:GetSetObjects()) do
+					local group=_group
+					group.Detection:Stop()
+				end
+			end
+		end
+	end
+end
 
 Warzone.red.DefSpawn = SPAWN:New(Warzone.red.Templates[1]):InitRandomizeTemplate(Warzone.red.Templates):InitRandomizeUnits(true, 300, 100)
 -- Warzone.blue.DefSpawn = SPAWN:New(Warzone.blue.Templates[1]):InitRandomizeTemplate(Warzone.blue.Templates):InitRandomizeUnits(true, 300, 100)
@@ -652,7 +727,12 @@ for Zone, Values in pairs(Constants) do
 	Warzone[Zone].blue.SpawnZone = ZONE_GROUP:New(Zone .. "_Blue_Spawn", GROUP:FindByName("GROUP_DYN_B_" .. Zone), 500)
 	Warzone[Zone].red.CAS = SPAWN:New("Template_RU_Heli_CAS_" .. Zone):InitCleanUp( 60 ):InitLimit(2, 0)
 	Warzone[Zone].blue.CAS = SPAWN:New("Template_US_Heli_CAS_" .. Zone):InitCleanUp( 60 ):InitLimit(2, 0)
-
+	Warzone[Zone].red.WH = WAREHOUSE:New(STATIC:FindByName("WH_" .. Zone .. "_R"))
+	BASE:E({"CREATEWH", "Static template", STATIC:FindByName("WH_" .. Zone .. "_R"):GetID()})
+	Warzone[Zone].red.WH:Start()
+	Warzone[Zone].blue.WH = WAREHOUSE:New(STATIC:FindByName("WH_" .. Zone .. "_B"))
+	BASE:E({"CREATEWH", "Static template", STATIC:FindByName("WH_" .. Zone .. "_R"):GetID()})
+	Warzone[Zone].blue.WH:Start()
 	Warzone[Zone].ZoneSet = SET_GROUP:New():FilterPrefixes( "ZONE_CAPTURE_" .. Zone ):FilterOnce()
 	Warzone[Zone].RedIndex = Values.RedIndex
 --	if setContains(ConfigVars, "Zones") then
@@ -669,6 +749,7 @@ for Zone, Values in pairs(Constants) do
 	-- ConfigVars.Zones[Zone].RedIndex = Values.RedIndex
 	Warzone[Zone].Zones = {}
 	Warzone[Zone].ZoneCaptureCoalition = {}
+	Warzone[Zone].WH = {}
 
 
 	for groupName, groupData in pairs( Warzone[Zone].ZoneSet.Set ) do
@@ -676,53 +757,26 @@ for Zone, Values in pairs(Constants) do
 		local splitSub = csplit(tmpSub, "_")
 		local radius = tonumber(splitSub[3])
 		local name = splitSub[2]
-		Warzone:E( "Creating Warzone in " .. name )
-		local id = tonumber(splitSub[1])
-		Warzone[Zone].Zones[id] = ZONE_GROUP:New(name .. "_Zone", groupData, radius)
-		Warzone[Zone].ZoneCaptureCoalition[id] = {}
-		if id <= Warzone[Zone].RedIndex then
-			Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.RED )
-			Warzone.red.DefSpawn:SpawnInZone( Warzone[Zone].ZoneCaptureCoalition[id].zcc.Zone, true )
-			else
-			BASE:E("Check for Warzone id : " .. id .. " in Zone " .. Zone)
-			Warzone[Zone].ZoneCaptureCoalition[id].zcc = ZONE_CAPTURE_COALITION:New( Warzone[Zone].Zones[id] , coalition.side.BLUE )
-			Warzone[Zone].blue.DefSpawn:SpawnInZone( Warzone[Zone].ZoneCaptureCoalition[id].zcc.Zone, true )
-		end
-		Warzone[Zone].ZoneCaptureCoalition[id].zcc:Mark()
-		Warzone[Zone].ZoneCaptureCoalition[id].zcc:Start( 5, 60 )
 		
-		Warzone[Zone].ZoneCaptureCoalition[id].zcc.OnEnterCaptured = function ( self )
-			local Coalition = self:GetCoalition()
-			if Coalition == coalition.side.RED then
-				Warzone[Zone].RedIndex = Warzone[Zone].RedIndex + 1
-				ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
-				local reinforcement = Warzone[Zone].red.OffGroup:Spawn()
-				reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex], false, 15, "On Road" )
-			end
-			if Coalition == coalition.side.BLUE then
-				Warzone[Zone].RedIndex = Warzone[Zone].RedIndex - 1
-				ConfigVars.Zones[Zone].RedIndex = Warzone[Zone].RedIndex
-				local reinforcement = Warzone[Zone].blue.OffGroup:Spawn()
-				reinforcement:TaskRouteToZone( Warzone[Zone].Zones[Warzone[Zone].RedIndex + 1], false, 15, "On Road" )
-			end
-		end
+		local id = tonumber(splitSub[1])
 
-		Warzone[Zone].ZoneCaptureCoalition[id].zcc.OnEnterAttacked = function ( self )
-			local Coalition = self:GetCoalition()
-			local AttackCoord = self.Zone:GetRandomCoordinate()
-			if Coalition == coalition.side.RED then
-				HeliGroup = Warzone[Zone].red.CAS:Spawn()
-			end
-			if Coalition == coalition.side.BLUE then
-				HeliGroup = Warzone[Zone].blue.CAS:Spawn()
-			end
-			local HeliCoord = HeliGroup:GetCoordinate()
-			local CurrentWaypoint = HeliCoord:WaypointAirTurningPoint( COORDINATE.WaypointAltType.RADIO, 110 )
-			local ToWaypoint = AttackCoord:WaypointAirTurningPoint( COORDINATE.WaypointAltType.RADIO, 110 )
-			HeliGroup:Route( { CurrentWaypoint , ToWaypoint }, 1 )
-	--		HeliGroup:TaskRouteToZone( self.Zone, true, 120, "Vee" )
-			HeliGroup:OptionROEWeaponFree()
+		Warzone:E( "Creating Warzone in " .. name .. ", zone " .. Zone .. ", id " .. id)
+		-- Warzone[Zone].WH[id] = WAREHOUSE:New(STATIC:FindByName("WH_" .. Zone .. "_" .. id ))
+		
+		if id <= Warzone[Zone].RedIndex then
+			local static = Warzone.red.WHTemplate:SpawnFromPointVec2(groupData:GetPointVec2(), 0, "Static_" .. Zone .. "_" .. id)
+			BASE:E({"SPAWNSTATICID", static:GetID()})
+			-- Warzone[Zone].WH[id] = WAREHOUSE:New(STATIC:FindByName("Static_" .. Zone .. "_" .. id), "WareHouse_" .. Zone .. "_" .. id)
+			local WHSched = SCHEDULER:New(nil, CreateWH, {Warzone, Zone, id, name, radius, static, groupData, "red"}, 5)
+		else
+			BASE:E("Check for Warzone id : " .. id .. " in Zone " .. Zone)
+			local static = Warzone.blue.WHTemplate:SpawnFromPointVec2(groupData:GetPointVec2(), 0, "Static_" .. Zone .. "_" .. id)
+			local WHSched = SCHEDULER:New(nil, CreateWH, {Warzone, Zone, id, name, radius, static, groupData, "blue"}, 5)
 		end
+		-- Warzone[Zone].ZoneCaptureCoalition[id].zcc:Mark()
+		-- Warzone[Zone].ZoneCaptureCoalition[id].zcc:Start( 5, 60 )
+		
+		
 	end
 
 	Warzone[Zone].blue.OffGroup:OnSpawnGroup( BlueSpawnFunc, Zone, true )
