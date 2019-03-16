@@ -795,7 +795,8 @@ function RadioSpeech(RadioGroup, SpeechTest)
 		local SpeechData = SPEECH[Sp]
 		SCHEDULER:New( nil, 
 			function()
-				RadioGroup.Radio:NewUnitTransmission(SpeechData.FileName, "", SpeechData.Duration, RadioGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()				
+				-- RadioGroup.Radio:NewUnitTransmission(SpeechData.FileName, "", SpeechData.Duration, RadioGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()
+				RadioGroup.Radio:NewUnitTransmission("beaconsilent.ogg", Sp, SpeechData.Duration, RadioGroup.Frequency / 1000000, radio.modulation.AM, false):Broadcast()				
 			end, {}, Delay
 		)	
 		Delay = Delay + SpeechData.Duration

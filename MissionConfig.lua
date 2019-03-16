@@ -14,6 +14,7 @@ local obj1 = {
 			["RedIndex"] = 2;
 		};
 	};
+	["Generation"] = 7410;
 	["UnpackedUnits"] = {
 		[1] = {
 			["y"] = 176.46574401855;
@@ -36,7 +37,7 @@ local obj1 = {
 			["x"] = -23881.72265625;
 			["Template"] = "TEMPLATE_NONA";
 			["z"] = 266102.71875;
-			["Generation"] = 7158;
+			["Generation"] = 7069;
 			["Player"] = "Kalbuth";
 		};
 		[4] = {
@@ -44,10 +45,9 @@ local obj1 = {
 			["x"] = -23881.72265625;
 			["Template"] = "TEMPLATE_NONA";
 			["z"] = 266102.71875;
-			["Generation"] = 7069;
+			["Generation"] = 7158;
 			["Player"] = "Kalbuth";
 		};
 	};
-	["Generation"] = 7407;
 }
 return obj1
